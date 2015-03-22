@@ -247,25 +247,27 @@ public class ArrayDeque<E> extends AbstractCollection<E>
     }
 
     public E pollFirst() {
-        int h = head;
+        final Object[] elements = this.elements;
+        final int h = head;
         @SuppressWarnings("unchecked")
         E result = (E) elements[h];
         // Element is null if deque empty
-        if (result == null)
-            return null;
-        elements[h] = null;     // Must null out slot
-        head = (h + 1) & (elements.length - 1);
+        if (result != null) {
+            elements[h] = null; // Must null out slot
+            head = (h + 1) & (elements.length - 1);
+        }
         return result;
     }
 
     public E pollLast() {
-        int t = (tail - 1) & (elements.length - 1);
+        final Object[] elements = this.elements;
+        final int t = (tail - 1) & (elements.length - 1);
         @SuppressWarnings("unchecked")
         E result = (E) elements[t];
-        if (result == null)
-            return null;
-        elements[t] = null;
-        tail = t;
+        if (result != null) {
+            elements[t] = null;
+            tail = t;
+        }
         return result;
     }
 
@@ -901,7 +903,7 @@ public class ArrayDeque<E> extends AbstractCollection<E>
                 throw new NullPointerException();
             Object[] a = deq.elements;
             int m = a.length - 1, f = getFence(), i = index;
-            if (i != fence) {
+            if (i != f) {
                 @SuppressWarnings("unchecked") E e = (E)a[i];
                 index = (i + 1) & m;
                 if (e == null)

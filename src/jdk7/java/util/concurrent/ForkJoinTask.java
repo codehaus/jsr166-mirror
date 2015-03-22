@@ -12,14 +12,6 @@ import java.util.List;
 import java.util.RandomAccess;
 import java.lang.ref.WeakReference;
 import java.lang.ref.ReferenceQueue;
-import java.util.concurrent.Callable;
-import java.util.concurrent.CancellationException;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
-import java.util.concurrent.RejectedExecutionException;
-import java.util.concurrent.RunnableFuture;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import java.util.concurrent.locks.ReentrantLock;
 import java.lang.reflect.Constructor;
 
@@ -1415,8 +1407,6 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
             try {
                 result = callable.call();
                 return true;
-            } catch (Error err) {
-                throw err;
             } catch (RuntimeException rex) {
                 throw rex;
             } catch (Exception ex) {

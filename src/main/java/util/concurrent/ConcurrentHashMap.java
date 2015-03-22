@@ -596,11 +596,11 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
             this.next = next;
         }
 
-        public final K getKey()        { return key; }
-        public final V getValue()      { return val; }
-        public final String toString() { return key + "=" + val; }
-        public final int hashCode() {
-            return key.hashCode() ^ val.hashCode();
+        public final K getKey()     { return key; }
+        public final V getValue()   { return val; }
+        public final int hashCode() { return key.hashCode() ^ val.hashCode(); }
+        public final String toString() {
+            return Helpers.mapEntryToString(key, val);
         }
         public final V setValue(V value) {
             throw new UnsupportedOperationException();
@@ -1649,7 +1649,7 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
                         if (fh >= 0) {
                             binCount = 1;
                             for (Node<K,V> e = f;; ++binCount) {
-                                K ek; V ev;
+                                K ek;
                                 if (e.hash == h &&
                                     ((ek = e.key) == key ||
                                      (ek != null && key.equals(ek)))) {
@@ -2588,7 +2588,7 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
      * too small, in which case resizes instead.
      */
     private final void treeifyBin(Node<K,V>[] tab, int index) {
-        Node<K,V> b; int n, sc;
+        Node<K,V> b; int n;
         if (tab != null) {
             if ((n = tab.length) < MIN_TREEIFY_CAPACITY)
                 tryPresize(n << 1);
@@ -3454,7 +3454,9 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
         public K getKey()        { return key; }
         public V getValue()      { return val; }
         public int hashCode()    { return key.hashCode() ^ val.hashCode(); }
-        public String toString() { return key + "=" + val; }
+        public String toString() {
+            return Helpers.mapEntryToString(key, val);
+        }
 
         public boolean equals(Object o) {
             Object k, v; Map.Entry<?,?> e;

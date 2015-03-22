@@ -8,7 +8,6 @@ import jsr166e.*;
 import junit.framework.*;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import java.util.HashSet;

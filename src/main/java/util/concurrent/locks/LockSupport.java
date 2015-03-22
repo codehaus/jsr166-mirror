@@ -367,17 +367,11 @@ public class LockSupport {
     // Hotspot implementation via intrinsics API
     private static final sun.misc.Unsafe U = sun.misc.Unsafe.getUnsafe();
     private static final long PARKBLOCKER;
-    private static final long SEED;
-    private static final long PROBE;
     private static final long SECONDARY;
     static {
         try {
             PARKBLOCKER = U.objectFieldOffset
                 (Thread.class.getDeclaredField("parkBlocker"));
-            SEED = U.objectFieldOffset
-                (Thread.class.getDeclaredField("threadLocalRandomSeed"));
-            PROBE = U.objectFieldOffset
-                (Thread.class.getDeclaredField("threadLocalRandomProbe"));
             SECONDARY = U.objectFieldOffset
                 (Thread.class.getDeclaredField("threadLocalRandomSecondarySeed"));
         } catch (ReflectiveOperationException e) {

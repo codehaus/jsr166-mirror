@@ -43,8 +43,6 @@ public class DelayQueueTest extends JSR166TestCase {
                             new Generic().testSuite());
     }
 
-    private static final int NOCAP = Integer.MAX_VALUE;
-
     /**
      * A delayed implementation for testing.
      * Most tests use Pseudodelays, where delays are all elapsed
@@ -131,7 +129,7 @@ public class DelayQueueTest extends JSR166TestCase {
         for (int i = (n & 1); i < n; i += 2)
             assertTrue(q.offer(new PDelay(i)));
         assertFalse(q.isEmpty());
-        assertEquals(NOCAP, q.remainingCapacity());
+        assertEquals(Integer.MAX_VALUE, q.remainingCapacity());
         assertEquals(n, q.size());
         return q;
     }
@@ -140,7 +138,7 @@ public class DelayQueueTest extends JSR166TestCase {
      * A new queue has unbounded capacity
      */
     public void testConstructor1() {
-        assertEquals(NOCAP, new DelayQueue().remainingCapacity());
+        assertEquals(Integer.MAX_VALUE, new DelayQueue().remainingCapacity());
     }
 
     /**
@@ -195,7 +193,7 @@ public class DelayQueueTest extends JSR166TestCase {
     public void testEmpty() {
         DelayQueue q = new DelayQueue();
         assertTrue(q.isEmpty());
-        assertEquals(NOCAP, q.remainingCapacity());
+        assertEquals(Integer.MAX_VALUE, q.remainingCapacity());
         q.add(new PDelay(1));
         assertFalse(q.isEmpty());
         q.add(new PDelay(2));
@@ -205,20 +203,19 @@ public class DelayQueueTest extends JSR166TestCase {
     }
 
     /**
-     * remainingCapacity does not change when elements added or removed,
-     * but size does
+     * remainingCapacity() always returns Integer.MAX_VALUE
      */
     public void testRemainingCapacity() {
-        DelayQueue q = populatedQueue(SIZE);
+        BlockingQueue q = populatedQueue(SIZE);
         for (int i = 0; i < SIZE; ++i) {
-            assertEquals(NOCAP, q.remainingCapacity());
+            assertEquals(Integer.MAX_VALUE, q.remainingCapacity());
             assertEquals(SIZE-i, q.size());
-            q.remove();
+            assertTrue(q.remove() instanceof PDelay);
         }
         for (int i = 0; i < SIZE; ++i) {
-            assertEquals(NOCAP, q.remainingCapacity());
+            assertEquals(Integer.MAX_VALUE, q.remainingCapacity());
             assertEquals(i, q.size());
-            q.add(new PDelay(i));
+            assertTrue(q.add(new PDelay(i)));
         }
     }
 
@@ -509,7 +506,7 @@ public class DelayQueueTest extends JSR166TestCase {
         q.clear();
         assertTrue(q.isEmpty());
         assertEquals(0, q.size());
-        assertEquals(NOCAP, q.remainingCapacity());
+        assertEquals(Integer.MAX_VALUE, q.remainingCapacity());
         PDelay x = new PDelay(1);
         q.add(x);
         assertFalse(q.isEmpty());

@@ -15,7 +15,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.NoSuchElementException;
-import java.util.Vector;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import junit.framework.Test;
@@ -84,16 +83,14 @@ public class CopyOnWriteArrayListTest extends JSR166TestCase {
     }
 
     /**
-     * addAll adds each element from the given collection
+     * addAll adds each element from the given collection, including duplicates
      */
     public void testAddAll() {
         CopyOnWriteArrayList full = populatedArray(3);
-        Vector v = new Vector();
-        v.add(three);
-        v.add(four);
-        v.add(five);
-        full.addAll(v);
+        assertTrue(full.addAll(Arrays.asList(three, four, five)));
         assertEquals(6, full.size());
+        assertTrue(full.addAll(Arrays.asList(three, four, five)));
+        assertEquals(9, full.size());
     }
 
     /**
@@ -102,11 +99,10 @@ public class CopyOnWriteArrayListTest extends JSR166TestCase {
      */
     public void testAddAllAbsent() {
         CopyOnWriteArrayList full = populatedArray(3);
-        Vector v = new Vector();
-        v.add(three);
-        v.add(four);
-        v.add(one); // will not add this element
-        full.addAllAbsent(v);
+        // "one" is duplicate and will not be added
+        assertEquals(2, full.addAllAbsent(Arrays.asList(three, four, one)));
+        assertEquals(5, full.size());
+        assertEquals(0, full.addAllAbsent(Arrays.asList(three, four, one)));
         assertEquals(5, full.size());
     }
 
@@ -196,12 +192,11 @@ public class CopyOnWriteArrayListTest extends JSR166TestCase {
      */
     public void testContainsAll() {
         CopyOnWriteArrayList full = populatedArray(3);
-        Vector v = new Vector();
-        v.add(one);
-        v.add(two);
-        assertTrue(full.containsAll(v));
-        v.add(six);
-        assertFalse(full.containsAll(v));
+        assertTrue(full.containsAll(Arrays.asList()));
+        assertTrue(full.containsAll(Arrays.asList(one)));
+        assertTrue(full.containsAll(Arrays.asList(one, two)));
+        assertFalse(full.containsAll(Arrays.asList(one, two, six)));
+        assertFalse(full.containsAll(Arrays.asList(six)));
     }
 
     /**
@@ -387,10 +382,9 @@ public class CopyOnWriteArrayListTest extends JSR166TestCase {
      */
     public void testRemoveAll() {
         CopyOnWriteArrayList full = populatedArray(3);
-        Vector v = new Vector();
-        v.add(one);
-        v.add(two);
-        full.removeAll(v);
+        assertTrue(full.removeAll(Arrays.asList(one, two)));
+        assertEquals(1, full.size());
+        assertFalse(full.removeAll(Arrays.asList(one, two)));
         assertEquals(1, full.size());
     }
 

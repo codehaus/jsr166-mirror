@@ -162,10 +162,9 @@ public class DelayQueue<E extends Delayed> extends AbstractQueue<E>
         lock.lock();
         try {
             E first = q.peek();
-            if (first == null || first.getDelay(NANOSECONDS) > 0)
-                return null;
-            else
-                return q.poll();
+            return (first == null || first.getDelay(NANOSECONDS) > 0)
+                ? null
+                : q.poll();
         } finally {
             lock.unlock();
         }

@@ -198,8 +198,8 @@ public class CountedCompleterTest extends JSR166TestCase {
         try {
             a.invoke();
             shouldThrow();
-        } catch (Throwable ex) {
-            assertSame(t, ex);
+        } catch (Throwable success) {
+            assertSame(t, success);
         }
     }
 

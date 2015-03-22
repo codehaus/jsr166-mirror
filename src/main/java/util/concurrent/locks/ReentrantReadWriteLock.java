@@ -246,7 +246,7 @@ public class ReentrantReadWriteLock
          * Maintained as a ThreadLocal; cached in cachedHoldCounter.
          */
         static final class HoldCounter {
-            int count = 0;
+            int count;          // initially 0
             // Use id, not reference, to avoid garbage retention
             final long tid = getThreadId(Thread.currentThread());
         }

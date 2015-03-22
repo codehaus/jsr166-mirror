@@ -460,9 +460,7 @@ public class ReentrantLockTest extends JSR166TestCase {
             barrier.await();
             awaitTermination(t);
             assertFalse(lock.isLocked());
-        } catch (Exception e) {
-            threadUnexpectedException(e);
-        }
+        } catch (Exception fail) { threadUnexpectedException(fail); }
     }
 
     /**
@@ -474,9 +472,7 @@ public class ReentrantLockTest extends JSR166TestCase {
         final PublicReentrantLock lock = new PublicReentrantLock(fair);
         try {
             lock.lockInterruptibly();
-        } catch (InterruptedException ie) {
-            threadUnexpectedException(ie);
-        }
+        } catch (InterruptedException fail) { threadUnexpectedException(fail); }
         assertLockedByMoi(lock);
         Thread t = newStartedThread(new InterruptedLockRunnable(lock));
         waitForQueuedThread(lock, t);
@@ -537,9 +533,7 @@ public class ReentrantLockTest extends JSR166TestCase {
             assertTrue(nanosRemaining <= 0);
             assertTrue(millisElapsedSince(startTime) >= timeoutMillis);
             lock.unlock();
-        } catch (InterruptedException e) {
-            threadUnexpectedException(e);
-        }
+        } catch (InterruptedException fail) { threadUnexpectedException(fail); }
     }
 
     /**
@@ -557,9 +551,7 @@ public class ReentrantLockTest extends JSR166TestCase {
             assertFalse(c.await(timeoutMillis, MILLISECONDS));
             assertTrue(millisElapsedSince(startTime) >= timeoutMillis);
             lock.unlock();
-        } catch (InterruptedException e) {
-            threadUnexpectedException(e);
-        }
+        } catch (InterruptedException fail) { threadUnexpectedException(fail); }
     }
 
     /**
@@ -578,9 +570,7 @@ public class ReentrantLockTest extends JSR166TestCase {
             assertFalse(c.awaitUntil(new java.util.Date(d.getTime() + timeoutMillis)));
             assertTrue(millisElapsedSince(startTime) >= timeoutMillis);
             lock.unlock();
-        } catch (InterruptedException e) {
-            threadUnexpectedException(e);
-        }
+        } catch (InterruptedException fail) { threadUnexpectedException(fail); }
     }
 
     /**

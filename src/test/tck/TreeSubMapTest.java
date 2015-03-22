@@ -392,8 +392,8 @@ public class TreeSubMapTest extends JSR166TestCase {
      * get(null) of nonempty map throws NPE
      */
     public void testGet_NullPointerException() {
+        NavigableMap c = map5();
         try {
-            NavigableMap c = map5();
             c.get(null);
             shouldThrow();
         } catch (NullPointerException success) {}
@@ -403,8 +403,8 @@ public class TreeSubMapTest extends JSR166TestCase {
      * containsKey(null) of nonempty map throws NPE
      */
     public void testContainsKey_NullPointerException() {
+        NavigableMap c = map5();
         try {
-            NavigableMap c = map5();
             c.containsKey(null);
             shouldThrow();
         } catch (NullPointerException success) {}
@@ -414,8 +414,8 @@ public class TreeSubMapTest extends JSR166TestCase {
      * put(null,x) throws NPE
      */
     public void testPut1_NullPointerException() {
+        NavigableMap c = map5();
         try {
-            NavigableMap c = map5();
             c.put(null, "whatever");
             shouldThrow();
         } catch (NullPointerException success) {}
@@ -425,8 +425,8 @@ public class TreeSubMapTest extends JSR166TestCase {
      * remove(null) throws NPE
      */
     public void testRemove1_NullPointerException() {
+        NavigableMap c = map5();
         try {
-            NavigableMap c = map5();
             c.remove(null);
             shouldThrow();
         } catch (NullPointerException success) {}
@@ -941,8 +941,8 @@ public class TreeSubMapTest extends JSR166TestCase {
      * get(null) of nonempty map throws NPE
      */
     public void testDescendingGet_NullPointerException() {
+        NavigableMap c = dmap5();
         try {
-            NavigableMap c = dmap5();
             c.get(null);
             shouldThrow();
         } catch (NullPointerException success) {}
@@ -952,8 +952,8 @@ public class TreeSubMapTest extends JSR166TestCase {
      * put(null,x) throws NPE
      */
     public void testDescendingPut1_NullPointerException() {
+        NavigableMap c = dmap5();
         try {
-            NavigableMap c = dmap5();
             c.put(null, "whatever");
             shouldThrow();
         } catch (NullPointerException success) {}

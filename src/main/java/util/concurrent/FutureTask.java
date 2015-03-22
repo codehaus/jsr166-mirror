@@ -376,19 +376,20 @@ public class FutureTask<V> implements RunnableFuture<V> {
         WaitNode q = null;
         boolean queued = false;
         for (;;) {
-            if (Thread.interrupted()) {
-                removeWaiter(q);
-                throw new InterruptedException();
-            }
-
             int s = state;
             if (s > COMPLETING) {
                 if (q != null)
                     q.thread = null;
                 return s;
             }
-            else if (s == COMPLETING) // cannot time out yet
+            else if (s == COMPLETING)
+                // We may have already promised (via isDone) that we are done
+                // so never return empty-handed or throw InterruptedException
                 Thread.yield();
+            else if (Thread.interrupted()) {
+                removeWaiter(q);
+                throw new InterruptedException();
+            }
             else if (q == null) {
                 if (timed && nanos <= 0L)
                     return s;

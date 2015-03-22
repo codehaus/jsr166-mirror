@@ -676,11 +676,11 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
                 return itemE;
             }
             else if (w.isInterrupted() || (timed && nanos <= 0)) {
-                unsplice(pred, s);            // try to unlink and cancel
-                if (s.casItem(e, s))          // return normally if lost CAS
+                unsplice(pred, s);           // try to unlink and cancel
+                if (s.casItem(e, s))         // return normally if lost CAS
                     return e;
             }
-            else if (spins < 0) {             // establish spins at/near front
+            else if (spins < 0) {            // establish spins at/near front
                 if ((spins = spinsFor(pred, s.isData)) > 0)
                     randomYields = ThreadLocalRandom.current();
             }
@@ -827,22 +827,7 @@ public class LinkedTransferQueue<E> extends AbstractQueue<E>
             if (size == 0)
                 return "[]";
 
-            // Copy each string into a perfectly sized char[]
-            final char[] chars = new char[charLength + 2 * size];
-            chars[0] = '[';
-            int j = 1;
-            for (int i = 0; i < size; i++) {
-                if (i > 0) {
-                    chars[j++] = ',';
-                    chars[j++] = ' ';
-                }
-                String s = a[i];
-                int len = s.length();
-                s.getChars(0, len, chars, j);
-                j += len;
-            }
-            chars[j] = ']';
-            return new String(chars);
+            return Helpers.toString(a, size, charLength);
         }
     }
 

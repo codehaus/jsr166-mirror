@@ -95,7 +95,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
      * are known not to be any.  Allows queue operations to update
      * iterator state.
      */
-    transient Itrs itrs = null;
+    transient Itrs itrs;
 
     // Internal helper methods
 
@@ -585,27 +585,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
     }
 
     public String toString() {
-        final ReentrantLock lock = this.lock;
-        lock.lock();
-        try {
-            int k = count;
-            if (k == 0)
-                return "[]";
-
-            final Object[] items = this.items;
-            StringBuilder sb = new StringBuilder();
-            sb.append('[');
-            for (int i = takeIndex; ; ) {
-                Object e = items[i];
-                sb.append(e == this ? "(this Collection)" : e);
-                if (--k == 0)
-                    return sb.append(']').toString();
-                sb.append(',').append(' ');
-                if (++i == items.length) i = 0;
-            }
-        } finally {
-            lock.unlock();
-        }
+        return Helpers.collectionToString(this);
     }
 
     /**
@@ -613,12 +593,12 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
      * The queue will be empty after this call returns.
      */
     public void clear() {
-        final Object[] items = this.items;
         final ReentrantLock lock = this.lock;
         lock.lock();
         try {
             int k = count;
             if (k > 0) {
+                final Object[] items = this.items;
                 final int putIndex = this.putIndex;
                 int i = takeIndex;
                 do {

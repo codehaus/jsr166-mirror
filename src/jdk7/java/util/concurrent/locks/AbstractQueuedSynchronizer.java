@@ -2250,6 +2250,10 @@ public abstract class AbstractQueuedSynchronizer
                 (Node.class.getDeclaredField("next"));
 
         } catch (Exception ex) { throw new Error(ex); }
+
+        // Reduce the risk of rare disastrous classloading in first call to
+        // LockSupport.park: https://bugs.openjdk.java.net/browse/JDK-8074773
+        Class<?> ensureLoaded = LockSupport.class;
     }
 
     /**

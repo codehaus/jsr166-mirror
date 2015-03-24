@@ -1235,9 +1235,10 @@ public class ConcurrentHashMap<K,V> implements ConcurrentMap<K,V>, Serializable 
             new Segment<?,?>[DEFAULT_CONCURRENCY_LEVEL];
         for (int i = 0; i < segments.length; ++i)
             segments[i] = new Segment<K,V>(LOAD_FACTOR);
-        s.putFields().put("segments", segments);
-        s.putFields().put("segmentShift", segmentShift);
-        s.putFields().put("segmentMask", segmentMask);
+        java.io.ObjectOutputStream.PutField streamFields = s.putFields();
+        streamFields.put("segments", segments);
+        streamFields.put("segmentShift", segmentShift);
+        streamFields.put("segmentMask", segmentMask);
         s.writeFields();
 
         Node<K,V>[] t;

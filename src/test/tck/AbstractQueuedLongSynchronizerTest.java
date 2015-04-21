@@ -94,7 +94,7 @@ public class AbstractQueuedLongSynchronizerTest extends JSR166TestCase {
         }
 
         public boolean tryReleaseShared(long ignore) {
-            setState(1 << 62);
+            setState(1L << 62);
             return true;
         }
     }

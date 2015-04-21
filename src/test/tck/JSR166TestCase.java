@@ -265,10 +265,7 @@ public class JSR166TestCase extends TestCase {
     public static boolean atLeastJava6() { return JAVA_CLASS_VERSION >= 50.0; }
     public static boolean atLeastJava7() { return JAVA_CLASS_VERSION >= 51.0; }
     public static boolean atLeastJava8() { return JAVA_CLASS_VERSION >= 52.0; }
-    public static boolean atLeastJava9() {
-        // As of 2014-05, java9 still uses 52.0 class file version
-        return JAVA_SPECIFICATION_VERSION.startsWith("1.9");
-    }
+    public static boolean atLeastJava9() { return JAVA_CLASS_VERSION >= 53.0; }
 
     /**
      * Collects all JSR166 unit tests as one suite.

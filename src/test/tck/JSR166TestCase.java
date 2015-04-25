@@ -50,6 +50,7 @@ import java.util.regex.Pattern;
 import junit.framework.AssertionFailedError;
 import junit.framework.Test;
 import junit.framework.TestCase;
+import junit.framework.TestResult;
 import junit.framework.TestSuite;
 
 /**
@@ -160,6 +161,12 @@ public class JSR166TestCase extends TestCase {
         Integer.getInteger("jsr166.runsPerTest", 1);
 
     /**
+     * The number of repetitions of the test suite (for finding leaks?).
+     */
+    private static final int suiteRuns =
+        Integer.getInteger("jsr166.suiteRuns", 1);
+
+    /**
      * A filter for tests to run, matching strings of the form
      * methodName(className), e.g. "testInvokeAll5(ForkJoinPoolTest)"
      * Usefully combined with jsr166.runsPerTest.
@@ -198,24 +205,28 @@ public class JSR166TestCase extends TestCase {
 
     /**
      * Runs all JSR166 unit tests using junit.textui.TestRunner.
-     * Optional command line arg provides the number of iterations to
-     * repeat running the tests.
      */
     public static void main(String[] args) {
+        main(suite(), args);
+    }
+
+    /**
+     * Runs all unit tests in the given test suite.
+     * Actual behavior influenced by system properties jsr166.*
+     */
+    static void main(Test suite, String[] args) {
         if (useSecurityManager) {
             System.err.println("Setting a permissive security manager");
             Policy.setPolicy(permissivePolicy());
             System.setSecurityManager(new SecurityManager());
         }
-        int iters = (args.length == 0) ? 1 : Integer.parseInt(args[0]);
-
-        Test s = suite();
-        for (int i = 0; i < iters; ++i) {
-            junit.textui.TestRunner.run(s);
+        for (int i = 0; i < suiteRuns; i++) {
+            TestResult result = junit.textui.TestRunner.run(suite);
+            if (!result.wasSuccessful())
+                System.exit(1);
             System.gc();
             System.runFinalization();
         }
-        System.exit(0);
     }
 
     public static TestSuite newTestSuite(Object... suiteOrClasses) {

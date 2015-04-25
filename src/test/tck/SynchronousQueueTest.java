@@ -36,7 +36,7 @@ public class SynchronousQueueTest extends JSR166TestCase {
     }
 
     public static void main(String[] args) {
-        junit.textui.TestRunner.run(suite());
+        main(suite(), args);
     }
 
     public static Test suite() {

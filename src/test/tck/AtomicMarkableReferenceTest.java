@@ -13,7 +13,7 @@ import junit.framework.TestSuite;
 
 public class AtomicMarkableReferenceTest extends JSR166TestCase {
     public static void main(String[] args) {
-        junit.textui.TestRunner.run(suite());
+        main(suite(), args);
     }
     public static Test suite() {
         return new TestSuite(AtomicMarkableReferenceTest.class);

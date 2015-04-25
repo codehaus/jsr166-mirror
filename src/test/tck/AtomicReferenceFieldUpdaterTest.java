@@ -18,7 +18,7 @@ public class AtomicReferenceFieldUpdaterTest extends JSR166TestCase {
     volatile int i;
 
     public static void main(String[] args) {
-        junit.textui.TestRunner.run(suite());
+        main(suite(), args);
     }
     public static Test suite() {
         return new TestSuite(AtomicReferenceFieldUpdaterTest.class);

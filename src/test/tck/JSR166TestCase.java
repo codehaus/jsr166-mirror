@@ -212,7 +212,7 @@ public class JSR166TestCase extends TestCase {
 
     /**
      * Runs all unit tests in the given test suite.
-     * Actual behavior influenced by system properties jsr166.*
+     * Actual behavior influenced by jsr166.* system properties.
      */
     static void main(Test suite, String[] args) {
         if (useSecurityManager) {

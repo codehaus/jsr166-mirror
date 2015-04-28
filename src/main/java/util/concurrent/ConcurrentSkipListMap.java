@@ -27,6 +27,7 @@ import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Predicate;
 
 /**
  * A scalable concurrent {@link ConcurrentNavigableMap} implementation.
@@ -2519,6 +2520,9 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
                 return (Spliterator<Map.Entry<K1,V1>>)
                     ((SubMap<K1,V1>)m).entryIterator();
         }
+        public boolean removeIf(Predicate<? super Entry<K1, V1>> filter) {
+            return ((ConcurrentSkipListMap<K1,V1>)m).removeEntryIf(filter);
+        }
     }
 
     /**
@@ -3229,6 +3233,24 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
                     break;
             }
         }
+    }
+
+    /**
+     * Helper method for EntrySet.removeIf
+     */
+    boolean removeEntryIf(Predicate<? super Entry<K, V>> function) {
+        if (function == null) throw new NullPointerException();
+        boolean removed = false;
+        for (Node<K,V> n = findFirst(); n != null; n = n.next) {
+            V v;
+            if ((v = n.getValidValue()) != null) {
+                K k = n.key;
+                Map.Entry<K,V> e = new AbstractMap.SimpleImmutableEntry<>(k, v);
+                if (function.test(e) && remove(k, v))
+                    removed = true;
+            }
+        }
+        return removed;
     }
 
     /**

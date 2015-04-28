@@ -31,6 +31,7 @@ import java.util.function.DoubleBinaryOperator;
 import java.util.function.Function;
 import java.util.function.IntBinaryOperator;
 import java.util.function.LongBinaryOperator;
+import java.util.function.Predicate;
 import java.util.function.ToDoubleBiFunction;
 import java.util.function.ToDoubleFunction;
 import java.util.function.ToIntBiFunction;
@@ -1590,6 +1591,26 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
                 }
             }
         }
+    }
+
+    /**
+     * Helper method for EntrySet.removeIf
+     */
+    boolean removeEntryIf(Predicate<? super Entry<K, V>> function) {
+        if (function == null) throw new NullPointerException();
+        Node<K,V>[] t;
+        boolean removed = false;
+        if ((t = table) != null) {
+            Traverser<K,V> it = new Traverser<K,V>(t, t.length, 0, t.length);
+            for (Node<K,V> p; (p = it.advance()) != null; ) {
+                K k = p.key;
+                V v = p.val;
+                Map.Entry<K,V> e = new AbstractMap.SimpleImmutableEntry<>(k, v);
+                if (function.test(e) && replaceNode(k, null, v) != null)
+                    removed = true;
+            }
+        }
+        return removed;
     }
 
     /**
@@ -4737,6 +4758,10 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
                     added = true;
             }
             return added;
+        }
+
+        public boolean removeIf(Predicate<? super Entry<K, V>> filter) {
+            return map.removeEntryIf(filter);
         }
 
         public final int hashCode() {

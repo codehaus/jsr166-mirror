@@ -66,9 +66,9 @@ public interface ConcurrentMap<K,V> extends Map<K,V> {
      * @implSpec The default implementation is equivalent to, for this
      * {@code map}:
      * <pre> {@code
-     * for (Map.Entry<K,V> entry : map.entrySet())
+     * for (Map.Entry<K,V> entry : map.entrySet()) {
      *   action.accept(entry.getKey(), entry.getValue());
-     * }</pre>
+     * }}</pre>
      *
      * @implNote The default implementation assumes that
      * {@code IllegalStateException} thrown by {@code getKey()} or
@@ -127,7 +127,7 @@ public interface ConcurrentMap<K,V> extends Map<K,V> {
      * @throws IllegalArgumentException if some property of the specified key
      *         or value prevents it from being stored in this map
      */
-     V putIfAbsent(K key, V value);
+    V putIfAbsent(K key, V value);
 
     /**
      * Removes the entry for a key only if currently mapped to a given value.
@@ -229,12 +229,12 @@ public interface ConcurrentMap<K,V> extends Map<K,V> {
      * @implSpec
      * <p>The default implementation is equivalent to, for this {@code map}:
      * <pre> {@code
-     * for (Map.Entry<K,V> entry : map.entrySet())
+     * for (Map.Entry<K,V> entry : map.entrySet()) {
      *   do {
      *     K k = entry.getKey();
      *     V v = entry.getValue();
      *   } while (!replace(k, v, function.apply(k, v)));
-     * }</pre>
+     * }}</pre>
      *
      * The default implementation may retry these steps when multiple
      * threads attempt updates including potentially calling the function
@@ -349,7 +349,7 @@ public interface ConcurrentMap<K,V> extends Map<K,V> {
                 if (replace(key, oldValue, newValue))
                     return newValue;
             } else if (remove(key, oldValue))
-               return null;
+                return null;
         }
         return oldValue;
     }

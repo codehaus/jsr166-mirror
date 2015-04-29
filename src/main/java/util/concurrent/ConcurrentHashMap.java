@@ -1614,6 +1614,25 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
     }
 
     /**
+     * Helper method for Values.removeIf
+     */
+    boolean removeValueIf(Predicate<? super  V> function) {
+        if (function == null) throw new NullPointerException();
+        Node<K,V>[] t;
+        boolean removed = false;
+        if ((t = table) != null) {
+            Traverser<K,V> it = new Traverser<K,V>(t, t.length, 0, t.length);
+            for (Node<K,V> p; (p = it.advance()) != null; ) {
+                K k = p.key;
+                V v = p.val;
+                if (function.test(v) && replaceNode(k, null, v) != null)
+                    removed = true;
+            }
+        }
+        return removed;
+    }
+
+    /**
      * If the specified key is not already associated with a value,
      * attempts to compute its value using the given mapping function
      * and enters it into this map unless {@code null}.  The entire
@@ -4689,6 +4708,10 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
         }
         public final boolean addAll(Collection<? extends V> c) {
             throw new UnsupportedOperationException();
+        }
+
+        public boolean removeIf(Predicate<? super V> filter) {
+            return map.removeValueIf(filter);
         }
 
         public Spliterator<V> spliterator() {

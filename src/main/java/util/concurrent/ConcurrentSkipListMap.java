@@ -2458,6 +2458,9 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
             else
                 return (Spliterator<E>)((SubMap<?,E>)m).valueIterator();
         }
+        public boolean removeIf(Predicate<? super E> filter) {
+            return ((ConcurrentSkipListMap<?,E>)m).removeValueIf(filter);
+        }
     }
 
     static final class EntrySet<K1,V1> extends AbstractSet<Map.Entry<K1,V1>> {
@@ -3247,6 +3250,23 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
                 K k = n.key;
                 Map.Entry<K,V> e = new AbstractMap.SimpleImmutableEntry<>(k, v);
                 if (function.test(e) && remove(k, v))
+                    removed = true;
+            }
+        }
+        return removed;
+    }
+
+    /**
+     * Helper method for Values.removeIf
+     */
+    boolean removeValueIf(Predicate<? super V> function) {
+        if (function == null) throw new NullPointerException();
+        boolean removed = false;
+        for (Node<K,V> n = findFirst(); n != null; n = n.next) {
+            V v;
+            if ((v = n.getValidValue()) != null) {
+                K k = n.key;
+                if (function.test(v) && remove(k, v))
                     removed = true;
             }
         }

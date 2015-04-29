@@ -1596,7 +1596,7 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
     /**
      * Helper method for EntrySet.removeIf
      */
-    boolean removeEntryIf(Predicate<? super Entry<K, V>> function) {
+    boolean removeEntryIf(Predicate<? super Entry<K,V>> function) {
         if (function == null) throw new NullPointerException();
         Node<K,V>[] t;
         boolean removed = false;
@@ -4783,7 +4783,7 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
             return added;
         }
 
-        public boolean removeIf(Predicate<? super Entry<K, V>> filter) {
+        public boolean removeIf(Predicate<? super Entry<K,V>> filter) {
             return map.removeEntryIf(filter);
         }
 

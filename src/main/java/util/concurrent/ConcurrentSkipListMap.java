@@ -3241,7 +3241,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
     /**
      * Helper method for EntrySet.removeIf
      */
-    boolean removeEntryIf(Predicate<? super Entry<K, V>> function) {
+    boolean removeEntryIf(Predicate<? super Entry<K,V>> function) {
         if (function == null) throw new NullPointerException();
         boolean removed = false;
         for (Node<K,V> n = findFirst(); n != null; n = n.next) {

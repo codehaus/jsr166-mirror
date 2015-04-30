@@ -195,11 +195,10 @@ public interface ConcurrentMap<K,V> extends Map<K,V> {
      * Replaces the entry for a key only if currently mapped to some value.
      * This is equivalent to, for this {@code map}:
      * <pre> {@code
-     * if (map.containsKey(key)) {
+     * if (map.containsKey(key))
      *   return map.put(key, value);
-     * } else {
-     *   return null;
-     * }}</pre>
+     * else
+     *   return null;}</pre>
      *
      * except that the action is performed atomically.
      *

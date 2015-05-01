@@ -162,7 +162,7 @@ public class ScheduledThreadPoolExecutor
         private final long sequenceNumber;
 
         /** The time the task is enabled to execute in nanoTime units */
-        private long time;
+        private volatile long time;
 
         /**
          * Period in nanoseconds for repeating tasks.

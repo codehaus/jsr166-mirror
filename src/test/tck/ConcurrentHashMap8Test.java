@@ -26,7 +26,7 @@ import junit.framework.TestSuite;
 
 public class ConcurrentHashMap8Test extends JSR166TestCase {
     public static void main(String[] args) {
-        junit.textui.TestRunner.run(suite());
+        main(suite(), args);
     }
     public static Test suite() {
         return new TestSuite(ConcurrentHashMap8Test.class);

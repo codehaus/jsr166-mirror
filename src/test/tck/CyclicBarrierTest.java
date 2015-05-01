@@ -19,7 +19,7 @@ import junit.framework.TestSuite;
 
 public class CyclicBarrierTest extends JSR166TestCase {
     public static void main(String[] args) {
-        junit.textui.TestRunner.run(suite());
+        main(suite(), args);
     }
     public static Test suite() {
         return new TestSuite(CyclicBarrierTest.class);

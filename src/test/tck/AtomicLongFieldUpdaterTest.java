@@ -17,7 +17,7 @@ public class AtomicLongFieldUpdaterTest extends JSR166TestCase {
     long w;
 
     public static void main(String[] args) {
-        junit.textui.TestRunner.run(suite());
+        main(suite(), args);
     }
     public static Test suite() {
         return new TestSuite(AtomicLongFieldUpdaterTest.class);

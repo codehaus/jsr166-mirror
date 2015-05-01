@@ -21,7 +21,7 @@ import junit.framework.TestSuite;
 
 public class AbstractQueuedLongSynchronizerTest extends JSR166TestCase {
     public static void main(String[] args) {
-        junit.textui.TestRunner.run(suite());
+        main(suite(), args);
     }
     public static Test suite() {
         return new TestSuite(AbstractQueuedLongSynchronizerTest.class);
@@ -94,7 +94,7 @@ public class AbstractQueuedLongSynchronizerTest extends JSR166TestCase {
         }
 
         public boolean tryReleaseShared(long ignore) {
-            setState(1 << 62);
+            setState(1L << 62);
             return true;
         }
     }

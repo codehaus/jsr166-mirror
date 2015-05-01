@@ -16,21 +16,13 @@ import java.util.function.Function;
  * A {@link java.util.Map} providing thread safety and atomicity
  * guarantees.
  *
- * <p>To support atomic usages, ConcurrentMaps are expected not to
- * allow {@code null} as a legal value (and to throw exceptions upon
- * attempted insertions). This enables a return value of {@code null}
- * to unambiguously indicate the absence of a mapping. This interface
- * does not strictly forbid implementations that may hold {@code null}
- * values. However, in any that do so, a {@code null} value must bear
- * the same interpretation as the absence of a mapping in order to
- * conform to method atomicity requirements.  Further, any that do so
- * must override all default method implementations.
- *
- * <p>Several methods (for example {@link #putIfAbsent}) inherited
- * from {@link Map} do not have default implementations, and so must
- * be provided by implementations of this interface, even though they
- * have (non-atomic) default implementations in the {@link Map}
- * interface.
+ * <p>To maintain the specified guarantees, default implementations of
+ * methods including {@link #putIfAbsent} inherited from {@link Map}
+ * must be overridden by implementations of this interface. Similarly,
+ * implementations of the collections returned by methods {@link
+ * #keySet}, {@link #values}, and {@link #entrySet} must override
+ * methods such as {@code removeIf} when necessary to
+ * preserve atomicity guarantees.
  *
  * <p>Memory consistency effects: As with other concurrent
  * collections, actions in a thread prior to placing an object into a
@@ -53,9 +45,10 @@ public interface ConcurrentMap<K,V> extends Map<K,V> {
     /**
      * {@inheritDoc}
      *
-     * @implNote The default implementation returns the result of
-     * {@code get(key)} unless {@code null}, in which case it returns
-     * the given defaultValue.
+     * @implNote This implementation assumes that the ConcurrentMap cannot
+     * contain null values and {@code get()} returning null unambiguously means
+     * the key is absent. Implementations which support null values
+     * <strong>must</strong> override this default implementation.
      *
      * @throws ClassCastException {@inheritDoc}
      * @throws NullPointerException {@inheritDoc}
@@ -73,13 +66,14 @@ public interface ConcurrentMap<K,V> extends Map<K,V> {
      * @implSpec The default implementation is equivalent to, for this
      * {@code map}:
      * <pre> {@code
-     * for (Map.Entry<K,V> entry : map.entrySet())
-     *   action.accept(entry.getKey(), entry.getValue());}</pre>
+     * for (Map.Entry<K,V> entry : map.entrySet()) {
+     *   action.accept(entry.getKey(), entry.getValue());
+     * }}</pre>
      *
-     * @implNote The default implementation assumes that {@code
-     * IllegalStateException} thrown by {@code getKey()} or {@code
-     * getValue()} indicates that the entry no longer exists.
-     * Operation continues for subsequent entries.
+     * @implNote The default implementation assumes that
+     * {@code IllegalStateException} thrown by {@code getKey()} or
+     * {@code getValue()} indicates that the entry has been removed and cannot
+     * be processed. Operation continues for subsequent entries.
      *
      * @throws NullPointerException {@inheritDoc}
      * @since 1.8
@@ -106,14 +100,15 @@ public interface ConcurrentMap<K,V> extends Map<K,V> {
      * with a value, associates it with the given value.
      * This is equivalent to, for this {@code map}:
      * <pre> {@code
-     * if (map.containsKey(key))
-     *   return map.get(key);
+     * if (!map.containsKey(key))
+     *   return map.put(key, value);
      * else
-     *   return map.put(key, value);}</pre>
+     *   return map.get(key);}</pre>
      *
      * except that the action is performed atomically.
      *
-     * @implNote There is no default implementation.
+     * @implNote This implementation intentionally re-abstracts the
+     * inappropriate default provided in {@code Map}.
      *
      * @param key key with which the specified value is to be associated
      * @param value value to be associated with the specified key
@@ -141,12 +136,14 @@ public interface ConcurrentMap<K,V> extends Map<K,V> {
      *     && Objects.equals(map.get(key), value)) {
      *   map.remove(key);
      *   return true;
-     * } else
-     *   return false;}</pre>
+     * } else {
+     *   return false;
+     * }}</pre>
      *
      * except that the action is performed atomically.
      *
-     * @implNote There is no default implementation.
+     * @implNote This implementation intentionally re-abstracts the
+     * inappropriate default provided in {@code Map}.
      *
      * @param key key with which the specified value is associated
      * @param value value expected to be associated with the specified key
@@ -170,12 +167,14 @@ public interface ConcurrentMap<K,V> extends Map<K,V> {
      *     && Objects.equals(map.get(key), oldValue)) {
      *   map.put(key, newValue);
      *   return true;
-     * } else
-     *   return false;}</pre>
+     * } else {
+     *   return false;
+     * }}</pre>
      *
      * except that the action is performed atomically.
      *
-     * @implNote There is no default implementation.
+     * @implNote This implementation intentionally re-abstracts the
+     * inappropriate default provided in {@code Map}.
      *
      * @param key key with which the specified value is associated
      * @param oldValue value expected to be associated with the specified key
@@ -203,7 +202,8 @@ public interface ConcurrentMap<K,V> extends Map<K,V> {
      *
      * except that the action is performed atomically.
      *
-     * @implNote There is no default implementation.
+     * @implNote This implementation intentionally re-abstracts the
+     * inappropriate default provided in {@code Map}.
      *
      * @param key key with which the specified value is associated
      * @param value value to be associated with the specified key
@@ -239,8 +239,13 @@ public interface ConcurrentMap<K,V> extends Map<K,V> {
      * }}</pre>
      *
      * The default implementation may retry these steps when multiple
-     * threads attempt updates, and may call the function multiple
-     * times.
+     * threads attempt updates including potentially calling the function
+     * repeatedly for a given key.
+     *
+     * <p>This implementation assumes that the ConcurrentMap cannot contain null
+     * values and {@code get()} returning null unambiguously means the key is
+     * absent. Implementations which support null values <strong>must</strong>
+     * override this default implementation.
      *
      * @throws UnsupportedOperationException {@inheritDoc}
      * @throws NullPointerException {@inheritDoc}
@@ -278,8 +283,13 @@ public interface ConcurrentMap<K,V> extends Map<K,V> {
      * }}</pre>
      *
      * The default implementation may retry these steps when multiple
-     * threads attempt updates, and may call the mapping function
-     * multiple times.
+     * threads attempt updates including potentially calling the mapping
+     * function multiple times.
+     *
+     * <p>This implementation assumes that the ConcurrentMap cannot contain null
+     * values and {@code get()} returning null unambiguously means the key is
+     * absent. Implementations which support null values <strong>must</strong>
+     * override this default implementation.
      *
      * @throws UnsupportedOperationException {@inheritDoc}
      * @throws ClassCastException {@inheritDoc}
@@ -314,9 +324,14 @@ public interface ConcurrentMap<K,V> extends Map<K,V> {
      *     map.remove(key, oldValue);
      * }}</pre>
      *
-     * The default implementation may retry these steps when multiple
-     * threads attempt updates, and may call the remapping function
+     * The default implementation may retry these steps when multiple threads
+     * attempt updates including potentially calling the remapping function
      * multiple times.
+     *
+     * <p>This implementation assumes that the ConcurrentMap cannot contain null
+     * values and {@code get()} returning null unambiguously means the key is
+     * absent. Implementations which support null values <strong>must</strong>
+     * override this default implementation.
      *
      * @throws UnsupportedOperationException {@inheritDoc}
      * @throws ClassCastException {@inheritDoc}
@@ -363,8 +378,13 @@ public interface ConcurrentMap<K,V> extends Map<K,V> {
      * }}</pre>
      *
      * The default implementation may retry these steps when multiple
-     * threads attempt updates, and may call the remapping function
-     * multiple times.
+     * threads attempt updates including potentially calling the remapping
+     * function multiple times.
+     *
+     * <p>This implementation assumes that the ConcurrentMap cannot contain null
+     * values and {@code get()} returning null unambiguously means the key is
+     * absent. Implementations which support null values <strong>must</strong>
+     * override this default implementation.
      *
      * @throws UnsupportedOperationException {@inheritDoc}
      * @throws ClassCastException {@inheritDoc}
@@ -434,9 +454,14 @@ public interface ConcurrentMap<K,V> extends Map<K,V> {
      * else
      *   map.put(key, newValue);}</pre>
      *
-     * The default implementation may retry these steps when multiple
-     * threads attempt updates, and may call the remapping function
-     * multiple times.
+     * <p>The default implementation may retry these steps when multiple
+     * threads attempt updates including potentially calling the remapping
+     * function multiple times.
+     *
+     * <p>This implementation assumes that the ConcurrentMap cannot contain null
+     * values and {@code get()} returning null unambiguously means the key is
+     * absent. Implementations which support null values <strong>must</strong>
+     * override this default implementation.
      *
      * @throws UnsupportedOperationException {@inheritDoc}
      * @throws ClassCastException {@inheritDoc}

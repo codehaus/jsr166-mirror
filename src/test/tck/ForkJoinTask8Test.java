@@ -35,7 +35,7 @@ public class ForkJoinTask8Test extends JSR166TestCase {
     static final short EXCEPTION_STATE = 1;
 
     public static void main(String[] args) {
-        junit.textui.TestRunner.run(suite());
+        main(suite(), args);
     }
 
     public static Test suite() {

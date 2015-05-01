@@ -16,7 +16,7 @@ public class AtomicIntegerFieldUpdaterTest extends JSR166TestCase {
     int w;
     long z;
     public static void main(String[] args) {
-        junit.textui.TestRunner.run(suite());
+        main(suite(), args);
     }
     public static Test suite() {
         return new TestSuite(AtomicIntegerFieldUpdaterTest.class);

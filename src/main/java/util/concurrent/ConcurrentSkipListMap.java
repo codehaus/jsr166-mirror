@@ -2458,8 +2458,22 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
             else
                 return (Spliterator<E>)((SubMap<?,E>)m).valueIterator();
         }
+
         public boolean removeIf(Predicate<? super E> filter) {
-            return ((ConcurrentSkipListMap<?,E>)m).removeValueIf(filter);
+            if (filter == null) throw new NullPointerException();
+            if (m instanceof ConcurrentSkipListMap)
+                return ((ConcurrentSkipListMap<?,E>)m).removeValueIf(filter);
+            // else use iterator
+            @SuppressWarnings("unchecked") Iterator<Map.Entry<Object,E>> it =
+              ((SubMap<Object,E>)m).entryIterator();
+            boolean removed = false;
+            while (it.hasNext()) {
+                Map.Entry<Object,E> e = it.next();
+                E v = e.getValue();
+                if (filter.test(v) && m.remove(e.getKey(), v))
+                    removed = true;
+            }
+            return removed;
         }
     }
 
@@ -2524,7 +2538,18 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
                     ((SubMap<K1,V1>)m).entryIterator();
         }
         public boolean removeIf(Predicate<? super Entry<K1, V1>> filter) {
-            return ((ConcurrentSkipListMap<K1,V1>)m).removeEntryIf(filter);
+            if (filter == null) throw new NullPointerException();
+            if (m instanceof ConcurrentSkipListMap)
+                return ((ConcurrentSkipListMap<K1,V1>)m).removeEntryIf(filter);
+            // else use iterator
+            Iterator<Map.Entry<K1,V1>> it = ((SubMap<K1,V1>)m).entryIterator();
+            boolean removed = false;
+            while (it.hasNext()) {
+                Map.Entry<K1,V1> e = it.next();
+                if (filter.test(e) && m.remove(e.getKey(), e.getValue()))
+                    removed = true;
+            }
+            return removed;
         }
     }
 

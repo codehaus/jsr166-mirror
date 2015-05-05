@@ -695,10 +695,10 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
      *
      * The traversal loops in doPut, doRemove, and findNear all
      * include the same three kinds of checks. And specialized
-     * versions appear in findFirst, and findLast and their
-     * variants. They can't easily share code because each uses the
-     * reads of fields held in locals occurring in the orders they
-     * were performed.
+     * versions appear in findFirst, and findLast and their variants.
+     * They can't easily share code because each uses the reads of
+     * fields held in locals occurring in the orders they were
+     * performed.
      *
      * @param key the key
      * @return node holding key, or null if no such
@@ -2543,13 +2543,13 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
 
     /**
      * Submaps returned by {@link ConcurrentSkipListMap} submap operations
-     * represent a subrange of mappings of their underlying
-     * maps. Instances of this class support all methods of their
-     * underlying maps, differing in that mappings outside their range are
-     * ignored, and attempts to add mappings outside their ranges result
-     * in {@link IllegalArgumentException}.  Instances of this class are
-     * constructed only using the {@code subMap}, {@code headMap}, and
-     * {@code tailMap} methods of their underlying maps.
+     * represent a subrange of mappings of their underlying maps.
+     * Instances of this class support all methods of their underlying
+     * maps, differing in that mappings outside their range are ignored,
+     * and attempts to add mappings outside their ranges result in {@link
+     * IllegalArgumentException}.  Instances of this class are constructed
+     * only using the {@code subMap}, {@code headMap}, and {@code tailMap}
+     * methods of their underlying maps.
      *
      * @serial include
      */

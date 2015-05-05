@@ -3076,7 +3076,7 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
 
         /**
          * Variant of main Iter class to traverse through submaps.
-         * Also serves as back-up Spliterator for views
+         * Also serves as back-up Spliterator for views.
          */
         abstract class SubMapIter<T> implements Iterator<T>, Spliterator<T> {
             /** the last node returned by next() */

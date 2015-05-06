@@ -470,10 +470,9 @@ public class ConcurrentSkipListSet<E>
      * @since 1.8
      */
     public Spliterator<E> spliterator() {
-        if (m instanceof ConcurrentSkipListMap)
-            return ((ConcurrentSkipListMap<E,?>)m).keySpliterator();
-        else
-            return ((ConcurrentSkipListMap.SubMap<E,?>)m).new SubMapKeyIterator();
+        return (m instanceof ConcurrentSkipListMap)
+            ? ((ConcurrentSkipListMap<E,?>)m).keySpliterator()
+            : ((ConcurrentSkipListMap.SubMap<E,?>)m).new SubMapKeyIterator();
     }
 
     // Support for resetting map in clone

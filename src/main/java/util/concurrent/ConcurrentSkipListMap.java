@@ -2352,10 +2352,9 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
             return (e == null) ? null : e.getKey();
         }
         public Iterator<K> iterator() {
-            if (m instanceof ConcurrentSkipListMap)
-                return ((ConcurrentSkipListMap<K,V>)m).new KeyIterator();
-            else
-                return ((SubMap<K,V>)m).new SubMapKeyIterator();
+            return (m instanceof ConcurrentSkipListMap)
+                ? ((ConcurrentSkipListMap<K,V>)m).new KeyIterator()
+                : ((SubMap<K,V>)m).new SubMapKeyIterator();
         }
         public boolean equals(Object o) {
             if (o == this)
@@ -2403,10 +2402,9 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
         }
 
         public Spliterator<K> spliterator() {
-            if (m instanceof ConcurrentSkipListMap)
-                return ((ConcurrentSkipListMap<K,V>)m).keySpliterator();
-            else
-                return ((SubMap<K,V>)m).new SubMapKeyIterator();
+            return (m instanceof ConcurrentSkipListMap)
+                ? ((ConcurrentSkipListMap<K,V>)m).keySpliterator()
+                : ((SubMap<K,V>)m).new SubMapKeyIterator();
         }
     }
 
@@ -2416,10 +2414,9 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
             m = map;
         }
         public Iterator<V> iterator() {
-            if (m instanceof ConcurrentSkipListMap)
-                return ((ConcurrentSkipListMap<K,V>)m).new ValueIterator();
-            else
-                return ((SubMap<K,V>)m).new SubMapValueIterator();
+            return (m instanceof ConcurrentSkipListMap)
+                ? ((ConcurrentSkipListMap<K,V>)m).new ValueIterator()
+                : ((SubMap<K,V>)m).new SubMapValueIterator();
         }
         public int size() { return m.size(); }
         public boolean isEmpty() { return m.isEmpty(); }
@@ -2429,10 +2426,9 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
         public <T> T[] toArray(T[] a) { return toList(this).toArray(a); }
 
         public Spliterator<V> spliterator() {
-            if (m instanceof ConcurrentSkipListMap)
-                return ((ConcurrentSkipListMap<K,V>)m).valueSpliterator();
-            else
-                return ((SubMap<K,V>)m).new SubMapValueIterator();
+            return (m instanceof ConcurrentSkipListMap)
+                ? ((ConcurrentSkipListMap<K,V>)m).valueSpliterator()
+                : ((SubMap<K,V>)m).new SubMapValueIterator();
         }
 
         public boolean removeIf(Predicate<? super V> filter) {
@@ -2459,10 +2455,9 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
             m = map;
         }
         public Iterator<Map.Entry<K,V>> iterator() {
-            if (m instanceof ConcurrentSkipListMap)
-                return ((ConcurrentSkipListMap<K,V>)m).new EntryIterator();
-            else
-                return ((SubMap<K,V>)m).new SubMapEntryIterator();
+            return (m instanceof ConcurrentSkipListMap)
+                ? ((ConcurrentSkipListMap<K,V>)m).new EntryIterator()
+                : ((SubMap<K,V>)m).new SubMapEntryIterator();
         }
 
         public boolean contains(Object o) {
@@ -2506,10 +2501,9 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
         public <T> T[] toArray(T[] a) { return toList(this).toArray(a); }
 
         public Spliterator<Map.Entry<K,V>> spliterator() {
-            if (m instanceof ConcurrentSkipListMap)
-                return ((ConcurrentSkipListMap<K,V>)m).entrySpliterator();
-            else
-                return ((SubMap<K,V>)m).new SubMapEntryIterator();
+            return (m instanceof ConcurrentSkipListMap)
+                ? ((ConcurrentSkipListMap<K,V>)m).entrySpliterator()
+                : ((SubMap<K,V>)m).new SubMapEntryIterator();
         }
         public boolean removeIf(Predicate<? super Entry<K,V>> filter) {
             if (filter == null) throw new NullPointerException();

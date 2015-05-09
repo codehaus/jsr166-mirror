@@ -2311,20 +2311,6 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
         }
     }
 
-    // Factory methods for iterators needed by ConcurrentSkipListSet etc
-
-    Iterator<K> keyIterator() {
-        return new KeyIterator();
-    }
-
-    Iterator<V> valueIterator() {
-        return new ValueIterator();
-    }
-
-    Iterator<Map.Entry<K,V>> entryIterator() {
-        return new EntryIterator();
-    }
-
     /* ---------------- View Classes -------------- */
 
     /*
@@ -2366,10 +2352,9 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
             return (e == null) ? null : e.getKey();
         }
         public Iterator<K> iterator() {
-            if (m instanceof ConcurrentSkipListMap)
-                return ((ConcurrentSkipListMap<K,V>)m).keyIterator();
-            else
-                return ((ConcurrentSkipListMap.SubMap<K,V>)m).keyIterator();
+            return (m instanceof ConcurrentSkipListMap)
+                ? ((ConcurrentSkipListMap<K,V>)m).new KeyIterator()
+                : ((SubMap<K,V>)m).new SubMapKeyIterator();
         }
         public boolean equals(Object o) {
             if (o == this)
@@ -2415,12 +2400,11 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
         public NavigableSet<K> descendingSet() {
             return new KeySet<>(m.descendingMap());
         }
-        @SuppressWarnings("unchecked")
+
         public Spliterator<K> spliterator() {
-            if (m instanceof ConcurrentSkipListMap)
-                return ((ConcurrentSkipListMap<K,V>)m).keySpliterator();
-            else
-                return (Spliterator<K>)((SubMap<K,V>)m).keyIterator();
+            return (m instanceof ConcurrentSkipListMap)
+                ? ((ConcurrentSkipListMap<K,V>)m).keySpliterator()
+                : ((SubMap<K,V>)m).new SubMapKeyIterator();
         }
     }
 
@@ -2430,10 +2414,9 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
             m = map;
         }
         public Iterator<V> iterator() {
-            if (m instanceof ConcurrentSkipListMap)
-                return ((ConcurrentSkipListMap<K,V>)m).valueIterator();
-            else
-                return ((SubMap<K,V>)m).valueIterator();
+            return (m instanceof ConcurrentSkipListMap)
+                ? ((ConcurrentSkipListMap<K,V>)m).new ValueIterator()
+                : ((SubMap<K,V>)m).new SubMapValueIterator();
         }
         public int size() { return m.size(); }
         public boolean isEmpty() { return m.isEmpty(); }
@@ -2441,12 +2424,11 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
         public void clear() { m.clear(); }
         public Object[] toArray()     { return toList(this).toArray();  }
         public <T> T[] toArray(T[] a) { return toList(this).toArray(a); }
-        @SuppressWarnings("unchecked")
+
         public Spliterator<V> spliterator() {
-            if (m instanceof ConcurrentSkipListMap)
-                return ((ConcurrentSkipListMap<K,V>)m).valueSpliterator();
-            else
-                return (Spliterator<V>)((SubMap<K,V>)m).valueIterator();
+            return (m instanceof ConcurrentSkipListMap)
+                ? ((ConcurrentSkipListMap<K,V>)m).valueSpliterator()
+                : ((SubMap<K,V>)m).new SubMapValueIterator();
         }
 
         public boolean removeIf(Predicate<? super V> filter) {
@@ -2454,7 +2436,8 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
             if (m instanceof ConcurrentSkipListMap)
                 return ((ConcurrentSkipListMap<K,V>)m).removeValueIf(filter);
             // else use iterator
-            Iterator<Map.Entry<K,V>> it = ((SubMap<K,V>)m).entryIterator();
+            Iterator<Map.Entry<K,V>> it =
+                ((SubMap<K,V>)m).new SubMapEntryIterator();
             boolean removed = false;
             while (it.hasNext()) {
                 Map.Entry<K,V> e = it.next();
@@ -2472,10 +2455,9 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
             m = map;
         }
         public Iterator<Map.Entry<K,V>> iterator() {
-            if (m instanceof ConcurrentSkipListMap)
-                return ((ConcurrentSkipListMap<K,V>)m).entryIterator();
-            else
-                return ((SubMap<K,V>)m).entryIterator();
+            return (m instanceof ConcurrentSkipListMap)
+                ? ((ConcurrentSkipListMap<K,V>)m).new EntryIterator()
+                : ((SubMap<K,V>)m).new SubMapEntryIterator();
         }
 
         public boolean contains(Object o) {
@@ -2517,20 +2499,19 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
         }
         public Object[] toArray()     { return toList(this).toArray();  }
         public <T> T[] toArray(T[] a) { return toList(this).toArray(a); }
-        @SuppressWarnings("unchecked")
+
         public Spliterator<Map.Entry<K,V>> spliterator() {
-            if (m instanceof ConcurrentSkipListMap)
-                return ((ConcurrentSkipListMap<K,V>)m).entrySpliterator();
-            else
-                return (Spliterator<Map.Entry<K,V>>)
-                    ((SubMap<K,V>)m).entryIterator();
+            return (m instanceof ConcurrentSkipListMap)
+                ? ((ConcurrentSkipListMap<K,V>)m).entrySpliterator()
+                : ((SubMap<K,V>)m).new SubMapEntryIterator();
         }
         public boolean removeIf(Predicate<? super Entry<K,V>> filter) {
             if (filter == null) throw new NullPointerException();
             if (m instanceof ConcurrentSkipListMap)
                 return ((ConcurrentSkipListMap<K,V>)m).removeEntryIf(filter);
             // else use iterator
-            Iterator<Map.Entry<K,V>> it = ((SubMap<K,V>)m).entryIterator();
+            Iterator<Map.Entry<K,V>> it =
+                ((SubMap<K,V>)m).new SubMapEntryIterator();
             boolean removed = false;
             while (it.hasNext()) {
                 Map.Entry<K,V> e = it.next();
@@ -3060,18 +3041,6 @@ public class ConcurrentSkipListMap<K,V> extends AbstractMap<K,V>
 
         public NavigableSet<K> descendingKeySet() {
             return descendingMap().navigableKeySet();
-        }
-
-        Iterator<K> keyIterator() {
-            return new SubMapKeyIterator();
-        }
-
-        Iterator<V> valueIterator() {
-            return new SubMapValueIterator();
-        }
-
-        Iterator<Map.Entry<K,V>> entryIterator() {
-            return new SubMapEntryIterator();
         }
 
         /**

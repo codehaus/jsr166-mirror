@@ -469,12 +469,10 @@ public class ConcurrentSkipListSet<E>
      * @return a {@code Spliterator} over the elements in this set
      * @since 1.8
      */
-    @SuppressWarnings("unchecked")
     public Spliterator<E> spliterator() {
-        if (m instanceof ConcurrentSkipListMap)
-            return ((ConcurrentSkipListMap<E,?>)m).keySpliterator();
-        else
-            return (Spliterator<E>)((ConcurrentSkipListMap.SubMap<E,?>)m).keyIterator();
+        return (m instanceof ConcurrentSkipListMap)
+            ? ((ConcurrentSkipListMap<E,?>)m).keySpliterator()
+            : ((ConcurrentSkipListMap.SubMap<E,?>)m).new SubMapKeyIterator();
     }
 
     // Support for resetting map in clone

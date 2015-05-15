@@ -7,6 +7,7 @@
  */
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.SECONDS;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -722,7 +723,8 @@ public class ThreadPoolExecutorSubclassTest extends JSR166TestCase {
      */
     public void testConstructor1() {
         try {
-            new CustomTPE(-1,1,LONG_DELAY_MS, MILLISECONDS, new ArrayBlockingQueue<Runnable>(10));
+            new CustomTPE(-1, 1, 1L, SECONDS,
+                          new ArrayBlockingQueue<Runnable>(10));
             shouldThrow();
         } catch (IllegalArgumentException success) {}
     }
@@ -732,7 +734,8 @@ public class ThreadPoolExecutorSubclassTest extends JSR166TestCase {
      */
     public void testConstructor2() {
         try {
-            new CustomTPE(1,-1,LONG_DELAY_MS, MILLISECONDS, new ArrayBlockingQueue<Runnable>(10));
+            new CustomTPE(1, -1, 1L, SECONDS,
+                          new ArrayBlockingQueue<Runnable>(10));
             shouldThrow();
         } catch (IllegalArgumentException success) {}
     }
@@ -742,7 +745,8 @@ public class ThreadPoolExecutorSubclassTest extends JSR166TestCase {
      */
     public void testConstructor3() {
         try {
-            new CustomTPE(1,0,LONG_DELAY_MS, MILLISECONDS, new ArrayBlockingQueue<Runnable>(10));
+            new CustomTPE(1, 0, 1L, SECONDS,
+                          new ArrayBlockingQueue<Runnable>(10));
             shouldThrow();
         } catch (IllegalArgumentException success) {}
     }
@@ -752,7 +756,8 @@ public class ThreadPoolExecutorSubclassTest extends JSR166TestCase {
      */
     public void testConstructor4() {
         try {
-            new CustomTPE(1,2,-1L,MILLISECONDS, new ArrayBlockingQueue<Runnable>(10));
+            new CustomTPE(1, 2, -1L, SECONDS,
+                          new ArrayBlockingQueue<Runnable>(10));
             shouldThrow();
         } catch (IllegalArgumentException success) {}
     }
@@ -762,7 +767,8 @@ public class ThreadPoolExecutorSubclassTest extends JSR166TestCase {
      */
     public void testConstructor5() {
         try {
-            new CustomTPE(2,1,LONG_DELAY_MS, MILLISECONDS, new ArrayBlockingQueue<Runnable>(10));
+            new CustomTPE(2, 1, 1L, SECONDS,
+                          new ArrayBlockingQueue<Runnable>(10));
             shouldThrow();
         } catch (IllegalArgumentException success) {}
     }
@@ -772,7 +778,7 @@ public class ThreadPoolExecutorSubclassTest extends JSR166TestCase {
      */
     public void testConstructorNullPointerException() {
         try {
-            new CustomTPE(1,2,LONG_DELAY_MS, MILLISECONDS,null);
+            new CustomTPE(1, 2, 1L, SECONDS, null);
             shouldThrow();
         } catch (NullPointerException success) {}
     }
@@ -782,7 +788,9 @@ public class ThreadPoolExecutorSubclassTest extends JSR166TestCase {
      */
     public void testConstructor6() {
         try {
-            new CustomTPE(-1,1,LONG_DELAY_MS, MILLISECONDS, new ArrayBlockingQueue<Runnable>(10),new SimpleThreadFactory());
+            new CustomTPE(-1, 1, 1L, SECONDS,
+                          new ArrayBlockingQueue<Runnable>(10),
+                          new SimpleThreadFactory());
             shouldThrow();
         } catch (IllegalArgumentException success) {}
     }
@@ -792,7 +800,9 @@ public class ThreadPoolExecutorSubclassTest extends JSR166TestCase {
      */
     public void testConstructor7() {
         try {
-            new CustomTPE(1,-1,LONG_DELAY_MS, MILLISECONDS, new ArrayBlockingQueue<Runnable>(10),new SimpleThreadFactory());
+            new CustomTPE(1,-1, 1L, SECONDS,
+                          new ArrayBlockingQueue<Runnable>(10),
+                          new SimpleThreadFactory());
             shouldThrow();
         } catch (IllegalArgumentException success) {}
     }
@@ -802,7 +812,9 @@ public class ThreadPoolExecutorSubclassTest extends JSR166TestCase {
      */
     public void testConstructor8() {
         try {
-            new CustomTPE(1,0,LONG_DELAY_MS, MILLISECONDS, new ArrayBlockingQueue<Runnable>(10),new SimpleThreadFactory());
+            new CustomTPE(1, 0, 1L, SECONDS,
+                          new ArrayBlockingQueue<Runnable>(10),
+                          new SimpleThreadFactory());
             shouldThrow();
         } catch (IllegalArgumentException success) {}
     }
@@ -812,7 +824,9 @@ public class ThreadPoolExecutorSubclassTest extends JSR166TestCase {
      */
     public void testConstructor9() {
         try {
-            new CustomTPE(1,2,-1L,MILLISECONDS, new ArrayBlockingQueue<Runnable>(10),new SimpleThreadFactory());
+            new CustomTPE(1, 2, -1L, SECONDS,
+                          new ArrayBlockingQueue<Runnable>(10),
+                          new SimpleThreadFactory());
             shouldThrow();
         } catch (IllegalArgumentException success) {}
     }
@@ -822,7 +836,9 @@ public class ThreadPoolExecutorSubclassTest extends JSR166TestCase {
      */
     public void testConstructor10() {
         try {
-            new CustomTPE(2,1,LONG_DELAY_MS, MILLISECONDS, new ArrayBlockingQueue<Runnable>(10),new SimpleThreadFactory());
+            new CustomTPE(2, 1, 1L, SECONDS,
+                          new ArrayBlockingQueue<Runnable>(10),
+                          new SimpleThreadFactory());
             shouldThrow();
         } catch (IllegalArgumentException success) {}
     }
@@ -832,7 +848,7 @@ public class ThreadPoolExecutorSubclassTest extends JSR166TestCase {
      */
     public void testConstructorNullPointerException2() {
         try {
-            new CustomTPE(1,2,LONG_DELAY_MS, MILLISECONDS,null,new SimpleThreadFactory());
+            new CustomTPE(1, 2, 1L, SECONDS, null, new SimpleThreadFactory());
             shouldThrow();
         } catch (NullPointerException success) {}
     }
@@ -842,8 +858,9 @@ public class ThreadPoolExecutorSubclassTest extends JSR166TestCase {
      */
     public void testConstructorNullPointerException3() {
         try {
-            ThreadFactory f = null;
-            new CustomTPE(1,2,LONG_DELAY_MS, MILLISECONDS,new ArrayBlockingQueue<Runnable>(10),f);
+            new CustomTPE(1, 2, 1L, SECONDS,
+                          new ArrayBlockingQueue<Runnable>(10),
+                          (ThreadFactory) null);
             shouldThrow();
         } catch (NullPointerException success) {}
     }
@@ -853,7 +870,9 @@ public class ThreadPoolExecutorSubclassTest extends JSR166TestCase {
      */
     public void testConstructor11() {
         try {
-            new CustomTPE(-1,1,LONG_DELAY_MS, MILLISECONDS, new ArrayBlockingQueue<Runnable>(10),new NoOpREHandler());
+            new CustomTPE(-1, 1, 1L, SECONDS,
+                          new ArrayBlockingQueue<Runnable>(10),
+                          new NoOpREHandler());
             shouldThrow();
         } catch (IllegalArgumentException success) {}
     }
@@ -863,7 +882,9 @@ public class ThreadPoolExecutorSubclassTest extends JSR166TestCase {
      */
     public void testConstructor12() {
         try {
-            new CustomTPE(1,-1,LONG_DELAY_MS, MILLISECONDS, new ArrayBlockingQueue<Runnable>(10),new NoOpREHandler());
+            new CustomTPE(1, -1, 1L, SECONDS,
+                          new ArrayBlockingQueue<Runnable>(10),
+                          new NoOpREHandler());
             shouldThrow();
         } catch (IllegalArgumentException success) {}
     }
@@ -873,7 +894,9 @@ public class ThreadPoolExecutorSubclassTest extends JSR166TestCase {
      */
     public void testConstructor13() {
         try {
-            new CustomTPE(1,0,LONG_DELAY_MS, MILLISECONDS, new ArrayBlockingQueue<Runnable>(10),new NoOpREHandler());
+            new CustomTPE(1, 0, 1L, SECONDS,
+                          new ArrayBlockingQueue<Runnable>(10),
+                          new NoOpREHandler());
             shouldThrow();
         } catch (IllegalArgumentException success) {}
     }
@@ -883,7 +906,9 @@ public class ThreadPoolExecutorSubclassTest extends JSR166TestCase {
      */
     public void testConstructor14() {
         try {
-            new CustomTPE(1,2,-1L,MILLISECONDS, new ArrayBlockingQueue<Runnable>(10),new NoOpREHandler());
+            new CustomTPE(1, 2, -1L, SECONDS,
+                          new ArrayBlockingQueue<Runnable>(10),
+                          new NoOpREHandler());
             shouldThrow();
         } catch (IllegalArgumentException success) {}
     }
@@ -893,7 +918,9 @@ public class ThreadPoolExecutorSubclassTest extends JSR166TestCase {
      */
     public void testConstructor15() {
         try {
-            new CustomTPE(2,1,LONG_DELAY_MS, MILLISECONDS, new ArrayBlockingQueue<Runnable>(10),new NoOpREHandler());
+            new CustomTPE(2, 1, 1L, SECONDS,
+                          new ArrayBlockingQueue<Runnable>(10),
+                          new NoOpREHandler());
             shouldThrow();
         } catch (IllegalArgumentException success) {}
     }
@@ -903,7 +930,9 @@ public class ThreadPoolExecutorSubclassTest extends JSR166TestCase {
      */
     public void testConstructorNullPointerException4() {
         try {
-            new CustomTPE(1,2,LONG_DELAY_MS, MILLISECONDS,null,new NoOpREHandler());
+            new CustomTPE(1, 2, 1L, SECONDS,
+                          null,
+                          new NoOpREHandler());
             shouldThrow();
         } catch (NullPointerException success) {}
     }
@@ -913,8 +942,9 @@ public class ThreadPoolExecutorSubclassTest extends JSR166TestCase {
      */
     public void testConstructorNullPointerException5() {
         try {
-            RejectedExecutionHandler r = null;
-            new CustomTPE(1,2,LONG_DELAY_MS, MILLISECONDS,new ArrayBlockingQueue<Runnable>(10),r);
+            new CustomTPE(1, 2, 1L, SECONDS,
+                          new ArrayBlockingQueue<Runnable>(10),
+                          (RejectedExecutionHandler) null);
             shouldThrow();
         } catch (NullPointerException success) {}
     }
@@ -924,7 +954,10 @@ public class ThreadPoolExecutorSubclassTest extends JSR166TestCase {
      */
     public void testConstructor16() {
         try {
-            new CustomTPE(-1,1,LONG_DELAY_MS, MILLISECONDS, new ArrayBlockingQueue<Runnable>(10),new SimpleThreadFactory(),new NoOpREHandler());
+            new CustomTPE(-1, 1, 1L, SECONDS,
+                          new ArrayBlockingQueue<Runnable>(10),
+                          new SimpleThreadFactory(),
+                          new NoOpREHandler());
             shouldThrow();
         } catch (IllegalArgumentException success) {}
     }
@@ -934,7 +967,10 @@ public class ThreadPoolExecutorSubclassTest extends JSR166TestCase {
      */
     public void testConstructor17() {
         try {
-            new CustomTPE(1,-1,LONG_DELAY_MS, MILLISECONDS, new ArrayBlockingQueue<Runnable>(10),new SimpleThreadFactory(),new NoOpREHandler());
+            new CustomTPE(1, -1, 1L, SECONDS,
+                          new ArrayBlockingQueue<Runnable>(10),
+                          new SimpleThreadFactory(),
+                          new NoOpREHandler());
             shouldThrow();
         } catch (IllegalArgumentException success) {}
     }
@@ -944,7 +980,10 @@ public class ThreadPoolExecutorSubclassTest extends JSR166TestCase {
      */
     public void testConstructor18() {
         try {
-            new CustomTPE(1,0,LONG_DELAY_MS, MILLISECONDS, new ArrayBlockingQueue<Runnable>(10),new SimpleThreadFactory(),new NoOpREHandler());
+            new CustomTPE(1, 0, 1L, SECONDS,
+                          new ArrayBlockingQueue<Runnable>(10),
+                          new SimpleThreadFactory(),
+                          new NoOpREHandler());
             shouldThrow();
         } catch (IllegalArgumentException success) {}
     }
@@ -954,7 +993,10 @@ public class ThreadPoolExecutorSubclassTest extends JSR166TestCase {
      */
     public void testConstructor19() {
         try {
-            new CustomTPE(1,2,-1L,MILLISECONDS, new ArrayBlockingQueue<Runnable>(10),new SimpleThreadFactory(),new NoOpREHandler());
+            new CustomTPE(1, 2, -1L, SECONDS,
+                          new ArrayBlockingQueue<Runnable>(10),
+                          new SimpleThreadFactory(),
+                          new NoOpREHandler());
             shouldThrow();
         } catch (IllegalArgumentException success) {}
     }
@@ -964,7 +1006,10 @@ public class ThreadPoolExecutorSubclassTest extends JSR166TestCase {
      */
     public void testConstructor20() {
         try {
-            new CustomTPE(2,1,LONG_DELAY_MS, MILLISECONDS, new ArrayBlockingQueue<Runnable>(10),new SimpleThreadFactory(),new NoOpREHandler());
+            new CustomTPE(2, 1, 1L, SECONDS,
+                          new ArrayBlockingQueue<Runnable>(10),
+                          new SimpleThreadFactory(),
+                          new NoOpREHandler());
             shouldThrow();
         } catch (IllegalArgumentException success) {}
     }
@@ -974,7 +1019,10 @@ public class ThreadPoolExecutorSubclassTest extends JSR166TestCase {
      */
     public void testConstructorNullPointerException6() {
         try {
-            new CustomTPE(1,2,LONG_DELAY_MS, MILLISECONDS,null,new SimpleThreadFactory(),new NoOpREHandler());
+            new CustomTPE(1, 2, 1L, SECONDS,
+                          null,
+                          new SimpleThreadFactory(),
+                          new NoOpREHandler());
             shouldThrow();
         } catch (NullPointerException success) {}
     }
@@ -984,8 +1032,10 @@ public class ThreadPoolExecutorSubclassTest extends JSR166TestCase {
      */
     public void testConstructorNullPointerException7() {
         try {
-            RejectedExecutionHandler r = null;
-            new CustomTPE(1,2,LONG_DELAY_MS, MILLISECONDS,new ArrayBlockingQueue<Runnable>(10),new SimpleThreadFactory(),r);
+            new CustomTPE(1, 2, 1L, SECONDS,
+                          new ArrayBlockingQueue<Runnable>(10),
+                          new SimpleThreadFactory(),
+                          (RejectedExecutionHandler) null);
             shouldThrow();
         } catch (NullPointerException success) {}
     }
@@ -995,8 +1045,7 @@ public class ThreadPoolExecutorSubclassTest extends JSR166TestCase {
      */
     public void testConstructorNullPointerException8() {
         try {
-            new CustomTPE(1, 2,
-                          LONG_DELAY_MS, MILLISECONDS,
+            new CustomTPE(1, 2, 1L, SECONDS,
                           new ArrayBlockingQueue<Runnable>(10),
                           (ThreadFactory) null,
                           new NoOpREHandler());

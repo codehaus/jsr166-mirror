@@ -132,8 +132,8 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
      * addAll(this) throws IllegalArgumentException
      */
     public void testAddAllSelf() {
+        LinkedTransferQueue q = populatedQueue(SIZE);
         try {
-            LinkedTransferQueue q = populatedQueue(SIZE);
             q.addAll(q);
             shouldThrow();
         } catch (IllegalArgumentException success) {}
@@ -144,12 +144,11 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
      * NullPointerException after possibly adding some elements
      */
     public void testAddAll3() {
+        LinkedTransferQueue q = new LinkedTransferQueue();
+        Integer[] ints = new Integer[SIZE];
+        for (int i = 0; i < SIZE - 1; ++i)
+            ints[i] = i;
         try {
-            LinkedTransferQueue q = new LinkedTransferQueue();
-            Integer[] ints = new Integer[SIZE];
-            for (int i = 0; i < SIZE - 1; ++i) {
-                ints[i] = i;
-            }
             q.addAll(Arrays.asList(ints));
             shouldThrow();
         } catch (NullPointerException success) {}
@@ -862,8 +861,8 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
      * tryTransfer(null) throws NullPointerException
      */
     public void testTryTransfer1() {
+        final LinkedTransferQueue q = new LinkedTransferQueue();
         try {
-            final LinkedTransferQueue q = new LinkedTransferQueue();
             q.tryTransfer(null);
             shouldThrow();
         } catch (NullPointerException success) {}

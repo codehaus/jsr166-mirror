@@ -1223,9 +1223,10 @@ public class ThreadPoolExecutorSubclassTest extends JSR166TestCase {
      * execute(null) throws NPE
      */
     public void testExecuteNull() {
-        ThreadPoolExecutor p = null;
+        ThreadPoolExecutor p =
+            new CustomTPE(1, 2, 1L, SECONDS,
+                          new ArrayBlockingQueue<Runnable>(10));
         try {
-            p = new CustomTPE(1,2,LONG_DELAY_MS, MILLISECONDS,new ArrayBlockingQueue<Runnable>(10));
             p.execute(null);
             shouldThrow();
         } catch (NullPointerException success) {}

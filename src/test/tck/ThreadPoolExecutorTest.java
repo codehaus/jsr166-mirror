@@ -1264,8 +1264,7 @@ public class ThreadPoolExecutorTest extends JSR166TestCase {
      */
     public void testExecuteNull() {
         ThreadPoolExecutor p =
-            new ThreadPoolExecutor(1, 2,
-                                   LONG_DELAY_MS, MILLISECONDS,
+            new ThreadPoolExecutor(1, 2, 1L, SECONDS,
                                    new ArrayBlockingQueue<Runnable>(10));
         try {
             p.execute(null);

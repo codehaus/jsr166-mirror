@@ -322,10 +322,10 @@ public class CopyOnWriteArraySetTest extends JSR166TestCase {
      * not store the objects inside the set
      */
     public void testToArray_ArrayStoreException() {
+        CopyOnWriteArraySet c = new CopyOnWriteArraySet();
+        c.add("zfasdfsdf");
+        c.add("asdadasd");
         try {
-            CopyOnWriteArraySet c = new CopyOnWriteArraySet();
-            c.add("zfasdfsdf");
-            c.add("asdadasd");
             c.toArray(new Long[5]);
             shouldThrow();
         } catch (ArrayStoreException success) {}

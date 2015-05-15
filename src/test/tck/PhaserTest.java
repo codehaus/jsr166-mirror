@@ -338,8 +338,8 @@ public class PhaserTest extends JSR166TestCase {
      * registered or unarrived parties would become negative
      */
     public void testArriveAndDeregister1() {
+        Phaser phaser = new Phaser();
         try {
-            Phaser phaser = new Phaser();
             phaser.arriveAndDeregister();
             shouldThrow();
         } catch (IllegalStateException success) {}
@@ -748,8 +748,8 @@ public class PhaserTest extends JSR166TestCase {
      * unarrived parties
      */
     public void testArriveAndAwaitAdvance1() {
+        Phaser phaser = new Phaser();
         try {
-            Phaser phaser = new Phaser();
             phaser.arriveAndAwaitAdvance();
             shouldThrow();
         } catch (IllegalStateException success) {}

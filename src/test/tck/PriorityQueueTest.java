@@ -79,8 +79,7 @@ public class PriorityQueueTest extends JSR166TestCase {
      */
     public void testConstructor4() {
         try {
-            Integer[] ints = new Integer[SIZE];
-            new PriorityQueue(Arrays.asList(ints));
+            new PriorityQueue(Arrays.asList(new Integer[SIZE]));
             shouldThrow();
         } catch (NullPointerException success) {}
     }
@@ -89,10 +88,10 @@ public class PriorityQueueTest extends JSR166TestCase {
      * Initializing from Collection with some null elements throws NPE
      */
     public void testConstructor5() {
+        Integer[] ints = new Integer[SIZE];
+        for (int i = 0; i < SIZE-1; ++i)
+            ints[i] = new Integer(i);
         try {
-            Integer[] ints = new Integer[SIZE];
-            for (int i = 0; i < SIZE-1; ++i)
-                ints[i] = new Integer(i);
             new PriorityQueue(Arrays.asList(ints));
             shouldThrow();
         } catch (NullPointerException success) {}
@@ -158,8 +157,8 @@ public class PriorityQueueTest extends JSR166TestCase {
      * offer(null) throws NPE
      */
     public void testOfferNull() {
+        PriorityQueue q = new PriorityQueue(1);
         try {
-            PriorityQueue q = new PriorityQueue(1);
             q.offer(null);
             shouldThrow();
         } catch (NullPointerException success) {}
@@ -169,8 +168,8 @@ public class PriorityQueueTest extends JSR166TestCase {
      * add(null) throws NPE
      */
     public void testAddNull() {
+        PriorityQueue q = new PriorityQueue(1);
         try {
-            PriorityQueue q = new PriorityQueue(1);
             q.add(null);
             shouldThrow();
         } catch (NullPointerException success) {}
@@ -212,8 +211,8 @@ public class PriorityQueueTest extends JSR166TestCase {
      * addAll(null) throws NPE
      */
     public void testAddAll1() {
+        PriorityQueue q = new PriorityQueue(1);
         try {
-            PriorityQueue q = new PriorityQueue(1);
             q.addAll(null);
             shouldThrow();
         } catch (NullPointerException success) {}
@@ -223,10 +222,9 @@ public class PriorityQueueTest extends JSR166TestCase {
      * addAll of a collection with null elements throws NPE
      */
     public void testAddAll2() {
+        PriorityQueue q = new PriorityQueue(SIZE);
         try {
-            PriorityQueue q = new PriorityQueue(SIZE);
-            Integer[] ints = new Integer[SIZE];
-            q.addAll(Arrays.asList(ints));
+            q.addAll(Arrays.asList(new Integer[SIZE]));
             shouldThrow();
         } catch (NullPointerException success) {}
     }
@@ -236,11 +234,11 @@ public class PriorityQueueTest extends JSR166TestCase {
      * possibly adding some elements
      */
     public void testAddAll3() {
+        PriorityQueue q = new PriorityQueue(SIZE);
+        Integer[] ints = new Integer[SIZE];
+        for (int i = 0; i < SIZE-1; ++i)
+            ints[i] = new Integer(i);
         try {
-            PriorityQueue q = new PriorityQueue(SIZE);
-            Integer[] ints = new Integer[SIZE];
-            for (int i = 0; i < SIZE-1; ++i)
-                ints[i] = new Integer(i);
             q.addAll(Arrays.asList(ints));
             shouldThrow();
         } catch (NullPointerException success) {}

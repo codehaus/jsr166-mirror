@@ -166,9 +166,9 @@ public class StampedLockTest extends JSR166TestCase {
      */
     public void testWriteUnlock_IMSE2() {
         StampedLock lock = new StampedLock();
+        long s = lock.writeLock();
+        lock.unlockWrite(s);
         try {
-            long s = lock.writeLock();
-            lock.unlockWrite(s);
             lock.unlockWrite(s);
             shouldThrow();
         } catch (IllegalMonitorStateException success) {}
@@ -179,8 +179,8 @@ public class StampedLockTest extends JSR166TestCase {
      */
     public void testWriteUnlock_IMSE3() {
         StampedLock lock = new StampedLock();
+        long s = lock.readLock();
         try {
-            long s = lock.readLock();
             lock.unlockWrite(s);
             shouldThrow();
         } catch (IllegalMonitorStateException success) {}
@@ -191,9 +191,9 @@ public class StampedLockTest extends JSR166TestCase {
      */
     public void testReadUnlock_IMSE() {
         StampedLock lock = new StampedLock();
+        long s = lock.readLock();
+        lock.unlockRead(s);
         try {
-            long s = lock.readLock();
-            lock.unlockRead(s);
             lock.unlockRead(s);
             shouldThrow();
         } catch (IllegalMonitorStateException success) {}
@@ -215,8 +215,8 @@ public class StampedLockTest extends JSR166TestCase {
      */
     public void testReadUnlock_IMSE3() {
         StampedLock lock = new StampedLock();
+        long s = lock.writeLock();
         try {
-            long s = lock.writeLock();
             lock.unlockRead(s);
             shouldThrow();
         } catch (IllegalMonitorStateException success) {}

@@ -91,8 +91,7 @@ public class TreeSetTest extends JSR166TestCase {
      */
     public void testConstructor4() {
         try {
-            Integer[] ints = new Integer[SIZE];
-            new TreeSet(Arrays.asList(ints));
+            new TreeSet(Arrays.asList(new Integer[SIZE]));
             shouldThrow();
         } catch (NullPointerException success) {}
     }
@@ -101,10 +100,10 @@ public class TreeSetTest extends JSR166TestCase {
      * Initializing from Collection with some null elements throws NPE
      */
     public void testConstructor5() {
+        Integer[] ints = new Integer[SIZE];
+        for (int i = 0; i < SIZE-1; ++i)
+            ints[i] = new Integer(i);
         try {
-            Integer[] ints = new Integer[SIZE];
-            for (int i = 0; i < SIZE-1; ++i)
-                ints[i] = new Integer(i);
             new TreeSet(Arrays.asList(ints));
             shouldThrow();
         } catch (NullPointerException success) {}

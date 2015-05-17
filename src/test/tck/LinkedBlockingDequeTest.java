@@ -424,8 +424,8 @@ public class LinkedBlockingDequeTest extends JSR166TestCase {
      * push(null) throws NPE
      */
     public void testPushNull() {
+        LinkedBlockingDeque q = new LinkedBlockingDeque(1);
         try {
-            LinkedBlockingDeque q = new LinkedBlockingDeque(1);
             q.push(null);
             shouldThrow();
         } catch (NullPointerException success) {}
@@ -435,14 +435,14 @@ public class LinkedBlockingDequeTest extends JSR166TestCase {
      * push succeeds if not full; throws ISE if full
      */
     public void testPush() {
+        LinkedBlockingDeque q = new LinkedBlockingDeque(SIZE);
+        for (int i = 0; i < SIZE; ++i) {
+            Integer x = new Integer(i);
+            q.push(x);
+            assertEquals(x, q.peek());
+        }
+        assertEquals(0, q.remainingCapacity());
         try {
-            LinkedBlockingDeque q = new LinkedBlockingDeque(SIZE);
-            for (int i = 0; i < SIZE; ++i) {
-                Integer x = new Integer(i);
-                q.push(x);
-                assertEquals(x, q.peek());
-            }
-            assertEquals(0, q.remainingCapacity());
             q.push(new Integer(SIZE));
             shouldThrow();
         } catch (IllegalStateException success) {}

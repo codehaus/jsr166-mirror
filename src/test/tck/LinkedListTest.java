@@ -102,6 +102,8 @@ public class LinkedListTest extends JSR166TestCase {
     public void testOfferNull() {
         LinkedList q = new LinkedList();
         q.offer(null);
+        assertNull(q.get(0));
+        assertTrue(q.contains(null));
     }
 
     /**
@@ -128,8 +130,8 @@ public class LinkedListTest extends JSR166TestCase {
      * addAll(null) throws NPE
      */
     public void testAddAll1() {
+        LinkedList q = new LinkedList();
         try {
-            LinkedList q = new LinkedList();
             q.addAll(null);
             shouldThrow();
         } catch (NullPointerException success) {}

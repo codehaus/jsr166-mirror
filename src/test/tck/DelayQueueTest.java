@@ -156,8 +156,7 @@ public class DelayQueueTest extends JSR166TestCase {
      */
     public void testConstructor4() {
         try {
-            PDelay[] ints = new PDelay[SIZE];
-            new DelayQueue(Arrays.asList(ints));
+            new DelayQueue(Arrays.asList(new PDelay[SIZE]));
             shouldThrow();
         } catch (NullPointerException success) {}
     }
@@ -166,11 +165,11 @@ public class DelayQueueTest extends JSR166TestCase {
      * Initializing from Collection with some null elements throws NPE
      */
     public void testConstructor5() {
+        PDelay[] a = new PDelay[SIZE];
+        for (int i = 0; i < SIZE-1; ++i)
+            a[i] = new PDelay(i);
         try {
-            PDelay[] ints = new PDelay[SIZE];
-            for (int i = 0; i < SIZE-1; ++i)
-                ints[i] = new PDelay(i);
-            new DelayQueue(Arrays.asList(ints));
+            new DelayQueue(Arrays.asList(a));
             shouldThrow();
         } catch (NullPointerException success) {}
     }
@@ -243,8 +242,8 @@ public class DelayQueueTest extends JSR166TestCase {
      * addAll(this) throws IAE
      */
     public void testAddAllSelf() {
+        DelayQueue q = populatedQueue(SIZE);
         try {
-            DelayQueue q = populatedQueue(SIZE);
             q.addAll(q);
             shouldThrow();
         } catch (IllegalArgumentException success) {}
@@ -255,12 +254,12 @@ public class DelayQueueTest extends JSR166TestCase {
      * possibly adding some elements
      */
     public void testAddAll3() {
+        DelayQueue q = new DelayQueue();
+        PDelay[] a = new PDelay[SIZE];
+        for (int i = 0; i < SIZE-1; ++i)
+            a[i] = new PDelay(i);
         try {
-            DelayQueue q = new DelayQueue();
-            PDelay[] ints = new PDelay[SIZE];
-            for (int i = 0; i < SIZE-1; ++i)
-                ints[i] = new PDelay(i);
-            q.addAll(Arrays.asList(ints));
+            q.addAll(Arrays.asList(a));
             shouldThrow();
         } catch (NullPointerException success) {}
     }

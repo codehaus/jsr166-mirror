@@ -25,6 +25,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.NoSuchElementException;
+import java.util.Objects;
 import java.util.RandomAccess;
 import java.util.Spliterator;
 import java.util.Spliterators;
@@ -152,13 +153,6 @@ public class CopyOnWriteArrayList<E>
      */
     public boolean isEmpty() {
         return size() == 0;
-    }
-
-    /**
-     * Tests for equality, coping with nulls.
-     */
-    private static boolean eq(Object o1, Object o2) {
-        return (o1 == null) ? o2 == null : o1.equals(o2);
     }
 
     /**
@@ -507,7 +501,8 @@ public class CopyOnWriteArrayList<E>
             if (snapshot != current) findIndex: {
                 int prefix = Math.min(index, len);
                 for (int i = 0; i < prefix; i++) {
-                    if (current[i] != snapshot[i] && eq(o, current[i])) {
+                    if (current[i] != snapshot[i]
+                        && Objects.equals(o, current[i])) {
                         index = i;
                         break findIndex;
                     }
@@ -587,7 +582,8 @@ public class CopyOnWriteArrayList<E>
                 // Optimize for lost race to another addXXX operation
                 int common = Math.min(snapshot.length, len);
                 for (int i = 0; i < common; i++)
-                    if (current[i] != snapshot[i] && eq(e, current[i]))
+                    if (current[i] != snapshot[i]
+                        && Objects.equals(e, current[i]))
                         return false;
                 if (indexOf(e, current, common, len) >= 0)
                         return false;
@@ -953,9 +949,8 @@ public class CopyOnWriteArrayList<E>
         List<?> list = (List<?>)o;
         Iterator<?> it = list.iterator();
         Object[] elements = getArray();
-        int len = elements.length;
-        for (int i = 0; i < len; ++i)
-            if (!it.hasNext() || !eq(elements[i], it.next()))
+        for (int i = 0, len = elements.length; i < len; i++)
+            if (!it.hasNext() || !Objects.equals(elements[i], it.next()))
                 return false;
         if (it.hasNext())
             return false;

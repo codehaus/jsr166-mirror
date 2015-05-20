@@ -319,6 +319,7 @@
       <compilerarg value="-Xprefer:source"/>
       <compilerarg value="-XDignore.symbol.file=true"/>
       <compilerarg value="-Xlint:all"/>
+      <compilerarg value="-Werror"/>
       <compilerarg value="-Xdoclint:all/protected"/>
       <compilerarg line="-Xmaxerrs 1000 -Xmaxwarns 1000"/>
       <compilerarg line="${build.args}"/>
@@ -553,6 +554,7 @@
       <compilerarg value="-Xprefer:source"/>
       <compilerarg value="-XDignore.symbol.file=true"/>
       <compilerarg value="-Xlint:all"/>
+      <compilerarg value="-Werror"/>
       <compilerarg line="${build.args}"/>
 
     </javac>
@@ -740,6 +742,7 @@
       <include name="jsr166x/**/*.java"/>
       <compilerarg value="-XDignore.symbol.file=true"/>
       <compilerarg value="-Xlint:all,-unchecked,-rawtypes"/>
+      <compilerarg value="-Werror"/>
       <compilerarg line="${build.args}"/>
 
     </javac>
@@ -826,6 +829,7 @@
       <include name="jsr166y/**/*.java"/>
       <compilerarg value="-XDignore.symbol.file=true"/>
       <compilerarg value="-Xlint:all"/>
+      <compilerarg value="-Werror"/>
       <compilerarg line="${build.args}"/>
 
     </javac>
@@ -913,6 +917,7 @@
       <include name="extra166y/**/*.java"/>
       <compilerarg value="-XDignore.symbol.file=true"/>
       <compilerarg value="-Xlint:all,-unchecked,-rawtypes,-serial"/>
+      <compilerarg value="-Werror"/>
       <compilerarg line="${build.args}"/>
 
     </javac>
@@ -1000,6 +1005,7 @@
       <include name="jsr166e/**/*.java"/>
       <compilerarg value="-XDignore.symbol.file=true"/>
       <compilerarg value="-Xlint:all"/>
+      <compilerarg value="-Werror"/>
       <compilerarg line="${build.args}"/>
 
     </javac>
@@ -1026,6 +1032,7 @@
       <include name="jsr166e/**/*.java"/>
       <compilerarg value="-XDignore.symbol.file=true"/>
       <compilerarg value="-Xlint:all"/>
+      <compilerarg value="-Werror"/>
       <compilerarg value="-Xdoclint:all/protected"/>
 
     </javac>

@@ -820,22 +820,27 @@ public class CopyOnWriteArrayList<E>
     public boolean removeIf(Predicate<? super E> filter) {
         if (filter == null) throw new NullPointerException();
         synchronized (lock) {
-            Object[] elements = getArray();
-            int len = elements.length;
-            if (len != 0) {
-                int newlen = 0;
-                Object[] temp = new Object[len];
-                for (int i = 0; i < len; ++i) {
-                    @SuppressWarnings("unchecked") E e = (E) elements[i];
-                    if (!filter.test(e))
-                        temp[newlen++] = e;
-                }
-                if (newlen != len) {
-                    setArray(Arrays.copyOf(temp, newlen));
+            final Object[] elements = getArray();
+            final int len = elements.length;
+            int i;
+            for (i = 0; i < len; i++) {
+                @SuppressWarnings("unchecked") E e = (E) elements[i];
+                if (filter.test(e)) {
+                    int newlen = i;
+                    final Object[] newElements = new Object[len - 1];
+                    System.arraycopy(elements, 0, newElements, 0, newlen);
+                    for (i++; i < len; i++) {
+                        @SuppressWarnings("unchecked") E x = (E) elements[i];
+                        if (!filter.test(x))
+                            newElements[newlen++] = x;
+                    }
+                    setArray((newlen == len - 1)
+                             ? newElements // one match => one copy
+                             : Arrays.copyOf(newElements, newlen));
                     return true;
                 }
             }
-            return false;
+            return false;       // zero matches => zero copies
         }
     }
 

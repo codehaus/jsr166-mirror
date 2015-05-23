@@ -116,7 +116,7 @@ public class PriorityBlockingQueueTest extends JSR166TestCase {
      */
     public void testConstructor5() {
         Integer[] ints = new Integer[SIZE];
-        for (int i = 0; i < SIZE-1; ++i)
+        for (int i = 0; i < SIZE - 1; ++i)
             ints[i] = i;
         Collection<Integer> elements = Arrays.asList(ints);
         try {
@@ -148,7 +148,7 @@ public class PriorityBlockingQueueTest extends JSR166TestCase {
         for (int i = 0; i < SIZE; ++i)
             ints[i] = new Integer(i);
         q.addAll(Arrays.asList(ints));
-        for (int i = SIZE-1; i >= 0; --i)
+        for (int i = SIZE - 1; i >= 0; --i)
             assertEquals(ints[i], q.poll());
     }
 
@@ -234,7 +234,7 @@ public class PriorityBlockingQueueTest extends JSR166TestCase {
     public void testAddAll3() {
         PriorityBlockingQueue q = new PriorityBlockingQueue(SIZE);
         Integer[] ints = new Integer[SIZE];
-        for (int i = 0; i < SIZE-1; ++i)
+        for (int i = 0; i < SIZE - 1; ++i)
             ints[i] = new Integer(i);
         try {
             q.addAll(Arrays.asList(ints));
@@ -248,7 +248,7 @@ public class PriorityBlockingQueueTest extends JSR166TestCase {
     public void testAddAll5() {
         Integer[] empty = new Integer[0];
         Integer[] ints = new Integer[SIZE];
-        for (int i = SIZE-1; i >= 0; --i)
+        for (int i = SIZE - 1; i >= 0; --i)
             ints[i] = new Integer(i);
         PriorityBlockingQueue q = new PriorityBlockingQueue(SIZE);
         assertFalse(q.addAll(Arrays.asList(empty)));
@@ -512,7 +512,7 @@ public class PriorityBlockingQueueTest extends JSR166TestCase {
                 assertTrue(changed);
 
             assertTrue(q.containsAll(p));
-            assertEquals(SIZE-i, q.size());
+            assertEquals(SIZE - i, q.size());
             p.remove();
         }
     }
@@ -525,7 +525,7 @@ public class PriorityBlockingQueueTest extends JSR166TestCase {
             PriorityBlockingQueue q = populatedQueue(SIZE);
             PriorityBlockingQueue p = populatedQueue(i);
             assertTrue(q.removeAll(p));
-            assertEquals(SIZE-i, q.size());
+            assertEquals(SIZE - i, q.size());
             for (int j = 0; j < i; ++j) {
                 Integer x = (Integer)(p.remove());
                 assertFalse(q.contains(x));
@@ -689,7 +689,7 @@ public class PriorityBlockingQueueTest extends JSR166TestCase {
         final PriorityBlockingQueue q = populatedQueue(SIZE);
         Thread t = new Thread(new CheckedRunnable() {
             public void realRun() {
-                q.put(new Integer(SIZE+1));
+                q.put(new Integer(SIZE + 1));
             }});
 
         t.start();
@@ -706,7 +706,7 @@ public class PriorityBlockingQueueTest extends JSR166TestCase {
      * drainTo(c, n) empties first min(n, size) elements of queue into c
      */
     public void testDrainToN() {
-        PriorityBlockingQueue q = new PriorityBlockingQueue(SIZE*2);
+        PriorityBlockingQueue q = new PriorityBlockingQueue(SIZE * 2);
         for (int i = 0; i < SIZE + 2; ++i) {
             for (int j = 0; j < SIZE; j++)
                 assertTrue(q.offer(new Integer(j)));
@@ -714,7 +714,7 @@ public class PriorityBlockingQueueTest extends JSR166TestCase {
             q.drainTo(l, i);
             int k = (i < SIZE) ? i : SIZE;
             assertEquals(k, l.size());
-            assertEquals(SIZE-k, q.size());
+            assertEquals(SIZE - k, q.size());
             for (int j = 0; j < k; ++j)
                 assertEquals(l.get(j), new Integer(j));
             do {} while (q.poll() != null);

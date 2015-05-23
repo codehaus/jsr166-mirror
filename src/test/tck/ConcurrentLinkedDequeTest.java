@@ -75,7 +75,7 @@ public class ConcurrentLinkedDequeTest extends JSR166TestCase {
      */
     public void testConstructor5() {
         Integer[] ints = new Integer[SIZE];
-        for (int i = 0; i < SIZE-1; ++i)
+        for (int i = 0; i < SIZE - 1; ++i)
             ints[i] = new Integer(i);
         try {
             new ConcurrentLinkedDeque(Arrays.asList(ints));
@@ -115,7 +115,7 @@ public class ConcurrentLinkedDequeTest extends JSR166TestCase {
     public void testSize() {
         ConcurrentLinkedDeque q = populatedDeque(SIZE);
         for (int i = 0; i < SIZE; ++i) {
-            assertEquals(SIZE-i, q.size());
+            assertEquals(SIZE - i, q.size());
             q.remove();
         }
         for (int i = 0; i < SIZE; ++i) {
@@ -331,7 +331,7 @@ public class ConcurrentLinkedDequeTest extends JSR166TestCase {
     public void testAddAll3() {
         ConcurrentLinkedDeque q = new ConcurrentLinkedDeque();
         Integer[] ints = new Integer[SIZE];
-        for (int i = 0; i < SIZE-1; ++i)
+        for (int i = 0; i < SIZE - 1; ++i)
             ints[i] = new Integer(i);
         try {
             q.addAll(Arrays.asList(ints));
@@ -370,7 +370,7 @@ public class ConcurrentLinkedDequeTest extends JSR166TestCase {
      */
     public void testPollLast() {
         ConcurrentLinkedDeque q = populatedDeque(SIZE);
-        for (int i = SIZE-1; i >= 0; --i) {
+        for (int i = SIZE - 1; i >= 0; --i) {
             assertEquals(i, q.pollLast());
         }
         assertNull(q.pollLast());
@@ -470,7 +470,7 @@ public class ConcurrentLinkedDequeTest extends JSR166TestCase {
      */
     public void testPeekLast() {
         ConcurrentLinkedDeque q = populatedDeque(SIZE);
-        for (int i = SIZE-1; i >= 0; --i) {
+        for (int i = SIZE - 1; i >= 0; --i) {
             assertEquals(i, q.peekLast());
             assertEquals(i, q.pollLast());
             assertTrue(q.peekLast() == null ||
@@ -499,7 +499,7 @@ public class ConcurrentLinkedDequeTest extends JSR166TestCase {
      */
     public void testLastElement() {
         ConcurrentLinkedDeque q = populatedDeque(SIZE);
-        for (int i = SIZE-1; i >= 0; --i) {
+        for (int i = SIZE - 1; i >= 0; --i) {
             assertEquals(i, q.getLast());
             assertEquals(i, q.pollLast());
         }
@@ -624,7 +624,7 @@ public class ConcurrentLinkedDequeTest extends JSR166TestCase {
                 assertTrue(changed);
 
             assertTrue(q.containsAll(p));
-            assertEquals(SIZE-i, q.size());
+            assertEquals(SIZE - i, q.size());
             p.remove();
         }
     }
@@ -637,7 +637,7 @@ public class ConcurrentLinkedDequeTest extends JSR166TestCase {
             ConcurrentLinkedDeque q = populatedDeque(SIZE);
             ConcurrentLinkedDeque p = populatedDeque(i);
             assertTrue(q.removeAll(p));
-            assertEquals(SIZE-i, q.size());
+            assertEquals(SIZE - i, q.size());
             for (int j = 0; j < i; ++j) {
                 Integer x = (Integer)(p.remove());
                 assertFalse(q.contains(x));

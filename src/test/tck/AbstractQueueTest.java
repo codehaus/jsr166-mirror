@@ -153,7 +153,7 @@ public class AbstractQueueTest extends JSR166TestCase {
     public void testAddAll3() {
         Succeed q = new Succeed();
         Integer[] ints = new Integer[SIZE];
-        for (int i = 0; i < SIZE-1; ++i)
+        for (int i = 0; i < SIZE - 1; ++i)
             ints[i] = new Integer(i);
         try {
             q.addAll(Arrays.asList(ints));

@@ -104,7 +104,7 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
      */
     public void testConstructor5() {
         Integer[] ints = new Integer[SIZE];
-        for (int i = 0; i < SIZE-1; ++i)
+        for (int i = 0; i < SIZE - 1; ++i)
             ints[i] = i;
         Collection<Integer> elements = Arrays.asList(ints);
         try {
@@ -166,7 +166,7 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
             assertEquals(i, q.remove());
         }
         for (int i = 0; i < SIZE; ++i) {
-            assertEquals(SIZE-i, q.remainingCapacity());
+            assertEquals(SIZE - i, q.remainingCapacity());
             assertEquals(SIZE, q.size() + q.remainingCapacity());
             assertTrue(q.add(i));
         }
@@ -214,7 +214,7 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
     public void testAddAll3() {
         ArrayBlockingQueue q = new ArrayBlockingQueue(SIZE);
         Integer[] ints = new Integer[SIZE];
-        for (int i = 0; i < SIZE-1; ++i)
+        for (int i = 0; i < SIZE - 1; ++i)
             ints[i] = new Integer(i);
         try {
             q.addAll(Arrays.asList(ints));
@@ -572,7 +572,7 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
                 assertTrue(changed);
 
             assertTrue(q.containsAll(p));
-            assertEquals(SIZE-i, q.size());
+            assertEquals(SIZE - i, q.size());
             p.remove();
         }
     }
@@ -585,7 +585,7 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
             ArrayBlockingQueue q = populatedQueue(SIZE);
             ArrayBlockingQueue p = populatedQueue(i);
             assertTrue(q.removeAll(p));
-            assertEquals(SIZE-i, q.size());
+            assertEquals(SIZE - i, q.size());
             for (int j = 0; j < i; ++j) {
                 Integer x = (Integer)(p.remove());
                 assertFalse(q.contains(x));
@@ -619,11 +619,11 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
             checkToArray(q);
             assertEquals(i, q.poll());
             checkToArray(q);
-            q.add(SIZE+i);
+            q.add(SIZE + i);
         }
         for (int i = 0; i < SIZE; i++) {
             checkToArray(q);
-            assertEquals(SIZE+i, q.poll());
+            assertEquals(SIZE + i, q.poll());
         }
     }
 
@@ -673,11 +673,11 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
             checkToArray2(q);
             assertEquals(i, q.poll());
             checkToArray2(q);
-            q.add(SIZE+i);
+            q.add(SIZE + i);
         }
         for (int i = 0; i < SIZE; i++) {
             checkToArray2(q);
-            assertEquals(SIZE+i, q.poll());
+            assertEquals(SIZE + i, q.poll());
         }
     }
 
@@ -881,7 +881,7 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
         final ArrayBlockingQueue q = populatedQueue(SIZE);
         Thread t = new Thread(new CheckedRunnable() {
             public void realRun() throws InterruptedException {
-                q.put(new Integer(SIZE+1));
+                q.put(new Integer(SIZE + 1));
             }});
 
         t.start();
@@ -898,7 +898,7 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
      * drainTo(c, n) empties first min(n, size) elements of queue into c
      */
     public void testDrainToN() {
-        ArrayBlockingQueue q = new ArrayBlockingQueue(SIZE*2);
+        ArrayBlockingQueue q = new ArrayBlockingQueue(SIZE * 2);
         for (int i = 0; i < SIZE + 2; ++i) {
             for (int j = 0; j < SIZE; j++)
                 assertTrue(q.offer(new Integer(j)));
@@ -906,7 +906,7 @@ public class ArrayBlockingQueueTest extends JSR166TestCase {
             q.drainTo(l, i);
             int k = (i < SIZE) ? i : SIZE;
             assertEquals(k, l.size());
-            assertEquals(SIZE-k, q.size());
+            assertEquals(SIZE - k, q.size());
             for (int j = 0; j < k; ++j)
                 assertEquals(l.get(j), new Integer(j));
             do {} while (q.poll() != null);

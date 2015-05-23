@@ -9,6 +9,7 @@ package java.util.concurrent;
 import java.util.AbstractSet;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.Objects;
 import java.util.Set;
 import java.util.Spliterator;
 import java.util.Spliterators;
@@ -356,7 +357,7 @@ public class CopyOnWriteArraySet<E> extends AbstractSet<E>
                 return false;
             Object x = it.next();
             for (int i = 0; i < len; ++i) {
-                if (!matched[i] && eq(x, elements[i])) {
+                if (!matched[i] && Objects.equals(x, elements[i])) {
                     matched[i] = true;
                     continue outer;
                 }
@@ -393,12 +394,5 @@ public class CopyOnWriteArraySet<E> extends AbstractSet<E>
     public Spliterator<E> spliterator() {
         return Spliterators.spliterator
             (al.getArray(), Spliterator.IMMUTABLE | Spliterator.DISTINCT);
-    }
-
-    /**
-     * Tests for equality, coping with nulls.
-     */
-    private static boolean eq(Object o1, Object o2) {
-        return (o1 == null) ? o2 == null : o1.equals(o2);
     }
 }

@@ -78,7 +78,7 @@ public class LinkedTransferQueueTest extends JSR166TestCase {
      */
     public void testConstructor4() {
         Integer[] ints = new Integer[SIZE];
-        for (int i = 0; i < SIZE-1; ++i)
+        for (int i = 0; i < SIZE - 1; ++i)
             ints[i] = i;
         Collection<Integer> elements = Arrays.asList(ints);
         try {

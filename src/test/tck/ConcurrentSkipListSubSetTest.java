@@ -122,7 +122,7 @@ public class ConcurrentSkipListSubSetTest extends JSR166TestCase {
     public void testSize() {
         NavigableSet q = populatedSet(SIZE);
         for (int i = 0; i < SIZE; ++i) {
-            assertEquals(SIZE-i, q.size());
+            assertEquals(SIZE - i, q.size());
             q.pollFirst();
         }
         for (int i = 0; i < SIZE; ++i) {
@@ -201,8 +201,8 @@ public class ConcurrentSkipListSubSetTest extends JSR166TestCase {
     public void testAddAll3() {
         NavigableSet q = set0();
         Integer[] ints = new Integer[SIZE];
-        for (int i = 0; i < SIZE-1; ++i)
-            ints[i] = new Integer(i+SIZE);
+        for (int i = 0; i < SIZE - 1; ++i)
+            ints[i] = new Integer(i + SIZE);
         try {
             q.addAll(Arrays.asList(ints));
             shouldThrow();
@@ -216,7 +216,7 @@ public class ConcurrentSkipListSubSetTest extends JSR166TestCase {
         Integer[] empty = new Integer[0];
         Integer[] ints = new Integer[SIZE];
         for (int i = 0; i < SIZE; ++i)
-            ints[i] = new Integer(SIZE-1- i);
+            ints[i] = new Integer(SIZE - 1 - i);
         NavigableSet q = set0();
         assertFalse(q.addAll(Arrays.asList(empty)));
         assertTrue(q.addAll(Arrays.asList(ints)));
@@ -310,7 +310,7 @@ public class ConcurrentSkipListSubSetTest extends JSR166TestCase {
                 assertTrue(changed);
 
             assertTrue(q.containsAll(p));
-            assertEquals(SIZE-i, q.size());
+            assertEquals(SIZE - i, q.size());
             p.pollFirst();
         }
     }
@@ -323,7 +323,7 @@ public class ConcurrentSkipListSubSetTest extends JSR166TestCase {
             NavigableSet q = populatedSet(SIZE);
             NavigableSet p = populatedSet(i);
             assertTrue(q.removeAll(p));
-            assertEquals(SIZE-i, q.size());
+            assertEquals(SIZE - i, q.size());
             for (int j = 0; j < i; ++j) {
                 Integer x = (Integer)(p.pollFirst());
                 assertFalse(q.contains(x));
@@ -618,7 +618,7 @@ public class ConcurrentSkipListSubSetTest extends JSR166TestCase {
     public void testDescendingSize() {
         NavigableSet q = populatedSet(SIZE);
         for (int i = 0; i < SIZE; ++i) {
-            assertEquals(SIZE-i, q.size());
+            assertEquals(SIZE - i, q.size());
             q.pollFirst();
         }
         for (int i = 0; i < SIZE; ++i) {
@@ -697,8 +697,8 @@ public class ConcurrentSkipListSubSetTest extends JSR166TestCase {
     public void testDescendingAddAll3() {
         NavigableSet q = dset0();
         Integer[] ints = new Integer[SIZE];
-        for (int i = 0; i < SIZE-1; ++i)
-            ints[i] = new Integer(i+SIZE);
+        for (int i = 0; i < SIZE - 1; ++i)
+            ints[i] = new Integer(i + SIZE);
         try {
             q.addAll(Arrays.asList(ints));
             shouldThrow();
@@ -712,7 +712,7 @@ public class ConcurrentSkipListSubSetTest extends JSR166TestCase {
         Integer[] empty = new Integer[0];
         Integer[] ints = new Integer[SIZE];
         for (int i = 0; i < SIZE; ++i)
-            ints[i] = new Integer(SIZE-1- i);
+            ints[i] = new Integer(SIZE - 1 - i);
         NavigableSet q = dset0();
         assertFalse(q.addAll(Arrays.asList(empty)));
         assertTrue(q.addAll(Arrays.asList(ints)));
@@ -800,7 +800,7 @@ public class ConcurrentSkipListSubSetTest extends JSR166TestCase {
                 assertTrue(changed);
 
             assertTrue(q.containsAll(p));
-            assertEquals(SIZE-i, q.size());
+            assertEquals(SIZE - i, q.size());
             p.pollFirst();
         }
     }
@@ -813,7 +813,7 @@ public class ConcurrentSkipListSubSetTest extends JSR166TestCase {
             NavigableSet q = populatedSet(SIZE);
             NavigableSet p = populatedSet(i);
             assertTrue(q.removeAll(p));
-            assertEquals(SIZE-i, q.size());
+            assertEquals(SIZE - i, q.size());
             for (int j = 0; j < i; ++j) {
                 Integer x = (Integer)(p.pollFirst());
                 assertFalse(q.contains(x));

@@ -71,7 +71,7 @@ public class ArrayDequeTest extends JSR166TestCase {
      */
     public void testConstructor5() {
         Integer[] ints = new Integer[SIZE];
-        for (int i = 0; i < SIZE-1; ++i)
+        for (int i = 0; i < SIZE - 1; ++i)
             ints[i] = new Integer(i);
         try {
             new ArrayDeque(Arrays.asList(ints));
@@ -111,7 +111,7 @@ public class ArrayDequeTest extends JSR166TestCase {
     public void testSize() {
         ArrayDeque q = populatedDeque(SIZE);
         for (int i = 0; i < SIZE; ++i) {
-            assertEquals(SIZE-i, q.size());
+            assertEquals(SIZE - i, q.size());
             q.removeFirst();
         }
         for (int i = 0; i < SIZE; ++i) {
@@ -316,7 +316,7 @@ public class ArrayDequeTest extends JSR166TestCase {
     public void testAddAll3() {
         ArrayDeque q = new ArrayDeque();
         Integer[] ints = new Integer[SIZE];
-        for (int i = 0; i < SIZE-1; ++i)
+        for (int i = 0; i < SIZE - 1; ++i)
             ints[i] = new Integer(i);
         try {
             q.addAll(Arrays.asList(ints));
@@ -355,7 +355,7 @@ public class ArrayDequeTest extends JSR166TestCase {
      */
     public void testPollLast() {
         ArrayDeque q = populatedDeque(SIZE);
-        for (int i = SIZE-1; i >= 0; --i) {
+        for (int i = SIZE - 1; i >= 0; --i) {
             assertEquals(i, q.pollLast());
         }
         assertNull(q.pollLast());
@@ -440,7 +440,7 @@ public class ArrayDequeTest extends JSR166TestCase {
      */
     public void testPeekLast() {
         ArrayDeque q = populatedDeque(SIZE);
-        for (int i = SIZE-1; i >= 0; --i) {
+        for (int i = SIZE - 1; i >= 0; --i) {
             assertEquals(i, q.peekLast());
             assertEquals(i, q.pollLast());
             assertTrue(q.peekLast() == null ||
@@ -484,7 +484,7 @@ public class ArrayDequeTest extends JSR166TestCase {
      */
     public void testLastElement() {
         ArrayDeque q = populatedDeque(SIZE);
-        for (int i = SIZE-1; i >= 0; --i) {
+        for (int i = SIZE - 1; i >= 0; --i) {
             assertEquals(i, q.getLast());
             assertEquals(i, q.pollLast());
         }
@@ -605,7 +605,7 @@ public class ArrayDequeTest extends JSR166TestCase {
             boolean changed = q.retainAll(p);
             assertEquals(changed, (i > 0));
             assertTrue(q.containsAll(p));
-            assertEquals(SIZE-i, q.size());
+            assertEquals(SIZE - i, q.size());
             p.removeFirst();
         }
     }
@@ -618,7 +618,7 @@ public class ArrayDequeTest extends JSR166TestCase {
             ArrayDeque q = populatedDeque(SIZE);
             ArrayDeque p = populatedDeque(i);
             assertTrue(q.removeAll(p));
-            assertEquals(SIZE-i, q.size());
+            assertEquals(SIZE - i, q.size());
             for (int j = 0; j < i; ++j) {
                 assertFalse(q.contains(p.removeFirst()));
             }
@@ -650,11 +650,11 @@ public class ArrayDequeTest extends JSR166TestCase {
         for (int i = 0; i < SIZE; i++) {
             checkToArray(q);
             assertEquals(i, q.poll());
-            q.addLast(SIZE+i);
+            q.addLast(SIZE + i);
         }
         for (int i = 0; i < SIZE; i++) {
             checkToArray(q);
-            assertEquals(SIZE+i, q.poll());
+            assertEquals(SIZE + i, q.poll());
         }
     }
 
@@ -703,11 +703,11 @@ public class ArrayDequeTest extends JSR166TestCase {
         for (int i = 0; i < SIZE; i++) {
             checkToArray2(q);
             assertEquals(i, q.poll());
-            q.addLast(SIZE+i);
+            q.addLast(SIZE + i);
         }
         for (int i = 0; i < SIZE; i++) {
             checkToArray2(q);
-            assertEquals(SIZE+i, q.poll());
+            assertEquals(SIZE + i, q.poll());
         }
     }
 

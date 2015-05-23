@@ -63,7 +63,7 @@ public class CopyOnWriteArrayListTest extends JSR166TestCase {
      */
     public void testConstructor2() {
         Integer[] ints = new Integer[SIZE];
-        for (int i = 0; i < SIZE-1; ++i)
+        for (int i = 0; i < SIZE - 1; ++i)
             ints[i] = new Integer(i);
         CopyOnWriteArrayList a = new CopyOnWriteArrayList(ints);
         for (int i = 0; i < SIZE; ++i)
@@ -75,7 +75,7 @@ public class CopyOnWriteArrayListTest extends JSR166TestCase {
      */
     public void testConstructor3() {
         Integer[] ints = new Integer[SIZE];
-        for (int i = 0; i < SIZE-1; ++i)
+        for (int i = 0; i < SIZE - 1; ++i)
             ints[i] = new Integer(i);
         CopyOnWriteArrayList a = new CopyOnWriteArrayList(Arrays.asList(ints));
         for (int i = 0; i < SIZE; ++i)
@@ -437,7 +437,7 @@ public class CopyOnWriteArrayListTest extends JSR166TestCase {
         a = new Integer[0];
         assertSame(a, empty.toArray(a));
 
-        a = new Integer[SIZE/2];
+        a = new Integer[SIZE / 2];
         Arrays.fill(a, 42);
         assertSame(a, empty.toArray(a));
         assertNull(a[0]);
@@ -461,7 +461,7 @@ public class CopyOnWriteArrayListTest extends JSR166TestCase {
         assertSame(a, full.toArray(a));
         assertTrue(Arrays.equals(elements, a));
 
-        a = new Integer[2*SIZE];
+        a = new Integer[2 * SIZE];
         Arrays.fill(a, 42);
         assertSame(a, full.toArray(a));
         assertTrue(Arrays.equals(elements, Arrays.copyOf(a, SIZE)));

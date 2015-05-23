@@ -166,7 +166,7 @@ public class DelayQueueTest extends JSR166TestCase {
      */
     public void testConstructor5() {
         PDelay[] a = new PDelay[SIZE];
-        for (int i = 0; i < SIZE-1; ++i)
+        for (int i = 0; i < SIZE - 1; ++i)
             a[i] = new PDelay(i);
         try {
             new DelayQueue(Arrays.asList(a));
@@ -208,7 +208,7 @@ public class DelayQueueTest extends JSR166TestCase {
         BlockingQueue q = populatedQueue(SIZE);
         for (int i = 0; i < SIZE; ++i) {
             assertEquals(Integer.MAX_VALUE, q.remainingCapacity());
-            assertEquals(SIZE-i, q.size());
+            assertEquals(SIZE - i, q.size());
             assertTrue(q.remove() instanceof PDelay);
         }
         for (int i = 0; i < SIZE; ++i) {
@@ -256,7 +256,7 @@ public class DelayQueueTest extends JSR166TestCase {
     public void testAddAll3() {
         DelayQueue q = new DelayQueue();
         PDelay[] a = new PDelay[SIZE];
-        for (int i = 0; i < SIZE-1; ++i)
+        for (int i = 0; i < SIZE - 1; ++i)
             a[i] = new PDelay(i);
         try {
             q.addAll(Arrays.asList(a));
@@ -270,7 +270,7 @@ public class DelayQueueTest extends JSR166TestCase {
     public void testAddAll5() {
         PDelay[] empty = new PDelay[0];
         PDelay[] ints = new PDelay[SIZE];
-        for (int i = SIZE-1; i >= 0; --i)
+        for (int i = SIZE - 1; i >= 0; --i)
             ints[i] = new PDelay(i);
         DelayQueue q = new DelayQueue();
         assertFalse(q.addAll(Arrays.asList(empty)));
@@ -542,7 +542,7 @@ public class DelayQueueTest extends JSR166TestCase {
                 assertTrue(changed);
 
             assertTrue(q.containsAll(p));
-            assertEquals(SIZE-i, q.size());
+            assertEquals(SIZE - i, q.size());
             p.remove();
         }
     }
@@ -555,7 +555,7 @@ public class DelayQueueTest extends JSR166TestCase {
             DelayQueue q = populatedQueue(SIZE);
             DelayQueue p = populatedQueue(i);
             assertTrue(q.removeAll(p));
-            assertEquals(SIZE-i, q.size());
+            assertEquals(SIZE - i, q.size());
             for (int j = 0; j < i; ++j) {
                 PDelay x = (PDelay)(p.remove());
                 assertFalse(q.contains(x));
@@ -753,7 +753,7 @@ public class DelayQueueTest extends JSR166TestCase {
         final DelayQueue q = populatedQueue(SIZE);
         Thread t = new Thread(new CheckedRunnable() {
             public void realRun() {
-                q.put(new PDelay(SIZE+1));
+                q.put(new PDelay(SIZE + 1));
             }});
 
         t.start();
@@ -773,7 +773,7 @@ public class DelayQueueTest extends JSR166TestCase {
             ArrayList l = new ArrayList();
             q.drainTo(l, i);
             int k = (i < SIZE) ? i : SIZE;
-            assertEquals(SIZE-k, q.size());
+            assertEquals(SIZE - k, q.size());
             assertEquals(k, l.size());
         }
     }
